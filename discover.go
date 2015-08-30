@@ -76,13 +76,6 @@ func (p *DHCPPacket) parseMAC(s string) error {
 	return err
 }
 
-func checkError(err error) {
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
-		os.Exit(1)
-	}
-}
-
 func sendPacket(conn net.Conn, p *DHCPPacket) error {
 	var buffer bytes.Buffer
 	err := binary.Write(&buffer, binary.BigEndian, *p)
@@ -105,13 +98,17 @@ func receivePacket(conn *net.UDPConn, timeout time.Duration) (*DHCPPacket, *net.
 	return &p, remote, err
 }
 
-func sendUDPPacket(p *DHCPPacket, a string) {
+func sendUDPPacket(p *DHCPPacket, a string) error {
 	addr, err := net.ResolveUDPAddr("udp4", a)
-	checkError(err)
+	if err != nil {
+		return err
+	}
 	conn, err := net.DialUDP("udp4", nil, addr)
-	checkError(err)
+	if err != nil {
+		return err
+	}
 	defer conn.Close()
-	sendPacket(conn, p)
+	return sendPacket(conn, p)
 }
 
 func NewDHCPDiscoverPacket() *DHCPPacket {
@@ -137,6 +134,13 @@ func showOffer(p *DHCPPacket) {
 	fmt.Println("Server IP address :", p.Siaddr.String())
 	fmt.Println("Relay IP address  :", p.Giaddr.String())
 	fmt.Println()
+}
+
+func checkError(err error) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		os.Exit(1)
+	}
 }
 
 func usage() {
@@ -184,7 +188,8 @@ func main() {
 	fmt.Println("Send DHCP discover\n")
 	p := NewDHCPDiscoverPacket()
 	p.parseMAC(mac)
-	sendUDPPacket(p, net.IPv4bcast.String() + ":67")
+	err = sendUDPPacket(p, net.IPv4bcast.String() + ":67")
+	checkError(err)
 
 	t := time.Now()
 	for time.Since(t) < timeout {
