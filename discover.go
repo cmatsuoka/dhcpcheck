@@ -1,138 +1,119 @@
 package main
 
 import (
+	"./dhcp"
 	"bytes"
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"math/rand"
 	"net"
 	"os"
 	"time"
 )
 
-const (
-	BOOTREQUEST = 1
-	BOOTREPLY   = 2
-)
-
-const (
-	OPTION_MSG_TYPE = 0x35
-	OPTION_END      = 0xff
-)
-
-const (
-	DHCPDISCOVER = 1
-	DHCPOFFER    = 2
-	DHCPREQUEST  = 3
-	DHCPDECLINE  = 4
-	DHCPACK      = 5
-	DHCPNACK     = 6
-	DHCPRELEASE  = 7
-)
-
-const (
-	FLAG_BROADCAST = 1 << 15
-)
-
-const (
-	PACKET_SIZE    = 548
-	HTYPE_ETHERNET = 1
-	MAGIC          = 0x63825363
-)
-
-type IPv4Address [4]byte
-
-func (a *IPv4Address) String() string {
-	return fmt.Sprintf("%d.%d.%d.%d", a[0], a[1], a[2], a[3])
+type option struct {
+	Len  int
+	Name string
 }
 
-type DHCPOptions [308]byte
+var options map[byte]option
 
-type DHCPPacket struct {
-	Op      byte
-	Htype   byte
-	Hlen    byte
-	Hops    byte
-	Xid     uint32
-	Secs    uint16
-	Flags   uint16
-	Ciaddr  IPv4Address // client IP address
-	Yiaddr  IPv4Address // your IP address
-	Siaddr  IPv4Address // server IP address
-	Giaddr  IPv4Address // gateway IP address
-	Chaddr  [16]byte    // client hardware address
-	Sname   [64]byte
-	File    [128]byte
-	Magic   uint32
-	Options DHCPOptions
-}
-
-func (p *DHCPPacket) parseMAC(s string) error {
-	hw, err := net.ParseMAC(s)
-	if err == nil {
-		copy(p.Chaddr[0:6], hw)
+func init() {
+	options = map[byte]option{
+		dhcp.PadOption:          {0, "Pad Option"},
+		dhcp.Router:             {-1, "Router"},
+		dhcp.SubnetMask:         {4, "Subnet Mask"},
+		dhcp.DomainNameServer:   {-1, "Domain Name Server"},
+		dhcp.HostName:           {-1, "Host Name"},
+		dhcp.DomainName:         {-1, "Domain Name"},
+		dhcp.BroadcastAddress:   {4, "Broadcast Address"},
+		dhcp.StaticRoute:        {-1, "Static Route"},
+		dhcp.IPAddressLeaseTime: {4, "IP Address Lease Time"},
+		dhcp.DHCPMessageType:    {1, "DHCP Message Type"},
+		dhcp.ServerIdentifier:   {4, "Server Identifier"},
+		dhcp.RenewalTimeValue:   {4, "Renewal Time Value"},
+		dhcp.RebindingTimeValue: {4, "Rebinding Time Value"},
+		dhcp.DomainSearch:       {-1, "DomainSearch"},
+		dhcp.WebProxyServer:     {-1, "Web Proxy Server"},
 	}
-	return err
 }
 
-func sendPacket(conn net.Conn, p *DHCPPacket) error {
-	var buffer bytes.Buffer
-	err := binary.Write(&buffer, binary.BigEndian, *p)
-	if err != nil {
-		return err
-	}
-	_, err = conn.Write(buffer.Bytes())
-	return err
+func b32(data []byte) uint32 {
+	buf := bytes.NewBuffer(data)
+	var x uint32
+	binary.Read(buf, binary.BigEndian, &x)
+	return x
 }
 
-func receivePacket(conn *net.UDPConn, timeout time.Duration) (*DHCPPacket, *net.UDPAddr, error) {
-	conn.SetReadDeadline(time.Now().Add(timeout))
-	var b [1024]byte
-	_, remote, err := conn.ReadFromUDP(b[:])
-	if err != nil {
-		return nil, remote, err
-	}
-	var p DHCPPacket
-	err = binary.Read(bytes.NewReader(b[:]), binary.BigEndian, &p)
-	return &p, remote, err
+func ip4(data []byte) string {
+	var ip dhcp.IPv4Address
+	copy(ip[:], data[0:4])
+	return ip.String()
 }
 
-func sendUDPPacket(p *DHCPPacket, a string) error {
-	addr, err := net.ResolveUDPAddr("udp4", a)
-	if err != nil {
-		return err
+func parseOptions(p *dhcp.Packet) {
+	opts := p.Options
+	fmt.Println("Options:")
+loop:
+	for i := 0; i < len(opts); i++ {
+		o := opts[i]
+
+		switch o {
+		case dhcp.EndOption:
+			fmt.Print("End Option")
+			break loop
+		case dhcp.PadOption:
+			continue
+		}
+
+		length := int(opts[i+1])
+		_, ok := options[o]
+		if ok && options[o].Len >= 0 && options[o].Len != length {
+			fmt.Printf("corrupted option (%d,%d)\n",
+				options[o].Len, length)
+			break loop
+		}
+
+		if name := options[o].Name; name != "" {
+			fmt.Printf("%24s : ", options[o].Name)
+		} else {
+			fmt.Printf("%24d : ", o)
+		}
+
+		switch o {
+		case dhcp.DHCPMessageType:
+			t := opts[i+2]
+			fmt.Print(t)
+			break
+		case dhcp.Router, dhcp.DomainNameServer:
+			for n := 0; n < length; n += 4  {
+				fmt.Print(ip4(opts[i+2+n:i+6+n]), " ")
+			}
+		case dhcp.ServerIdentifier, dhcp.SubnetMask, dhcp.BroadcastAddress:
+			fmt.Print(ip4(opts[1+2:i+6]))
+			break
+		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue, dhcp.RebindingTimeValue:
+			fmt.Print(b32(opts[i+2 : i+6]))
+			break
+		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer:
+			fmt.Print(string(opts[i+2:i+2+length]))
+			break
+		case dhcp.DomainSearch:
+			fmt.Print("[TODO RFC 1035 section 4.1.4]")
+			break
+		}
+		fmt.Println()
+
+		i += 1 + length
 	}
-	conn, err := net.DialUDP("udp4", nil, addr)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-	return sendPacket(conn, p)
 }
 
-func NewDHCPDiscoverPacket() *DHCPPacket {
-	p := &DHCPPacket{
-		Op:    BOOTREQUEST,
-		Htype: HTYPE_ETHERNET,
-		Hlen:  6,
-		Hops:  0,
-		Xid:   rand.Uint32(),
-		Secs:  0,
-		Flags: FLAG_BROADCAST,
-		Magic: MAGIC,
-		Options: DHCPOptions{OPTION_MSG_TYPE, 1, DHCPDISCOVER,
-			OPTION_END},
-	}
-
-	return p
-}
-
-func showOffer(p *DHCPPacket) {
+func showOffer(p *dhcp.Packet) {
 	fmt.Println("Client IP address :", p.Ciaddr.String())
 	fmt.Println("Your IP address   :", p.Yiaddr.String())
 	fmt.Println("Server IP address :", p.Siaddr.String())
 	fmt.Println("Relay IP address  :", p.Giaddr.String())
+	parseOptions(p)
 	fmt.Println()
 }
 
@@ -189,14 +170,14 @@ func main() {
 
 	// Send discover packet
 	fmt.Println("Send DHCP discover\n")
-	p := NewDHCPDiscoverPacket()
-	p.parseMAC(mac)
-	err = sendUDPPacket(p, net.IPv4bcast.String()+":67")
+	p := dhcp.DiscoverPacket()
+	p.ParseMAC(mac)
+	err = dhcp.SendUDPPacket(p, net.IPv4bcast.String()+":67")
 	checkError(err)
 
 	t := time.Now()
 	for time.Since(t) < timeout {
-		o, remote, err := receivePacket(conn, timeout)
+		o, remote, err := dhcp.ReceivePacket(conn, timeout)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			break
