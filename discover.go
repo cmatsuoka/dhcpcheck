@@ -108,7 +108,7 @@ loop:
 	}
 }
 
-func showOffer(p *dhcp.Packet) {
+func showPacket(p *dhcp.Packet) {
 	fmt.Println("Client IP address :", p.Ciaddr.String())
 	fmt.Println("Your IP address   :", p.Yiaddr.String())
 	fmt.Println("Server IP address :", p.Siaddr.String())
@@ -169,21 +169,26 @@ func main() {
 	defer conn.Close()
 
 	// Send discover packet
-	fmt.Println("Send DHCP discover\n")
-	p := dhcp.DiscoverPacket()
+	p := dhcp.NewDiscoverPacket()
 	p.ParseMAC(mac)
-	err = dhcp.SendUDPPacket(p, net.IPv4bcast.String()+":67")
+
+	fmt.Println("\nSend DHCP discover")
+	showPacket(&p.Packet)
+	fmt.Println()
+
+	err = p.Send()
 	checkError(err)
 
 	t := time.Now()
 	for time.Since(t) < timeout {
-		o, remote, err := dhcp.ReceivePacket(conn, timeout)
+		var o dhcp.Packet
+		remote, err := o.Receive(conn, timeout)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			break
 		}
 		fmt.Println("Receive DHCP offer from", remote.IP.String())
-		showOffer(o)
+		showPacket(&o)
 	}
 	fmt.Println("No more offers.")
 }

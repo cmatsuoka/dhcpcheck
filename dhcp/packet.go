@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math/rand"
 	"net"
 	"time"
 )
@@ -61,6 +60,7 @@ type Packet struct {
 	Options OptionsArea
 }
 
+
 func (p *Packet) ParseMAC(s string) error {
 	hw, err := net.ParseMAC(s)
 	if err == nil {
@@ -69,7 +69,7 @@ func (p *Packet) ParseMAC(s string) error {
 	return err
 }
 
-func SendPacket(conn net.Conn, p *Packet) error {
+func (p *Packet) Send(conn net.Conn) error {
 	var buffer bytes.Buffer
 	err := binary.Write(&buffer, binary.BigEndian, *p)
 	if err != nil {
@@ -79,44 +79,14 @@ func SendPacket(conn net.Conn, p *Packet) error {
 	return err
 }
 
-func ReceivePacket(conn *net.UDPConn, timeout time.Duration) (*Packet, *net.UDPAddr, error) {
+func (p *Packet) Receive(conn *net.UDPConn, timeout time.Duration) (*net.UDPAddr, error) {
 	conn.SetReadDeadline(time.Now().Add(timeout))
 	var b [1024]byte
 	_, remote, err := conn.ReadFromUDP(b[:])
 	if err != nil {
-		return nil, remote, err
+		return remote, err
 	}
-	var p Packet
-	err = binary.Read(bytes.NewReader(b[:]), binary.BigEndian, &p)
-	return &p, remote, err
+	err = binary.Read(bytes.NewReader(b[:]), binary.BigEndian, p)
+	return remote, err
 }
 
-func SendUDPPacket(p *Packet, a string) error {
-	addr, err := net.ResolveUDPAddr("udp4", a)
-	if err != nil {
-		return err
-	}
-	conn, err := net.DialUDP("udp4", nil, addr)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-	return SendPacket(conn, p)
-}
-
-func DiscoverPacket() *Packet {
-	p := &Packet{
-		Op:    BOOTREQUEST,
-		Htype: HTYPE_ETHERNET,
-		Hlen:  6,
-		Hops:  0,
-		Xid:   rand.Uint32(),
-		Secs:  0,
-		Flags: FLAG_BROADCAST,
-		Magic: MAGIC,
-		Options: OptionsArea{DHCPMessageType, 1, DHCPDiscover,
-			EndOption},
-	}
-
-	return p
-}
