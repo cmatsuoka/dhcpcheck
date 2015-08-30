@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"flag"
 	"fmt"
 	"math/rand"
 	"net"
@@ -138,19 +139,38 @@ func showOffer(p *DHCPPacket) {
 	fmt.Println()
 }
 
-func main() {
-	iface := "wlp3s0"
-	mac := ""
-	timeout := 5 * time.Second
+func usage() {
+	fmt.Fprintf(os.Stderr, "usage: %s <iface>\n", os.Args[0])
+	flag.PrintDefaults()
+}
 
-	// Get interface MAC address
+func getMAC(s string) (string,error) {
 	ifaces, err := net.Interfaces()
 	checkError(err)
 	for _, i := range ifaces {
-		if i.Name == iface {
-			mac = i.HardwareAddr.String()
+		if i.Name == s {
+			return i.HardwareAddr.String(),nil
 		}
 	}
+	return "", fmt.Errorf("%s: no such interface", s)
+}
+
+func main() {
+	flag.Usage = usage
+	flag.Parse()
+
+	iface := flag.Arg(0)
+	if iface == "" {
+		usage()
+		os.Exit(1)
+	}
+
+	mac := ""
+	timeout := 5 * time.Second
+
+	mac,err := getMAC(iface)
+	checkError(err)
+
 	fmt.Printf("Interface: %s [%s]\n", iface, mac)
 
 	// Set up server
