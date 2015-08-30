@@ -22,13 +22,13 @@ const (
 )
 
 const (
-	MSG_TYPE_DISCOVER = 1
-	MSG_TYPE_OFFER    = 2
-	MSG_TYPE_REQUEST  = 3
-	MSG_TYPE_DECLINE  = 4
-	MSG_TYPE_ACK      = 5
-	MSG_TYPE_NACK     = 6
-	MSG_TYPE_RELEASE  = 7
+	DHCPDISCOVER = 1
+	DHCPOFFER    = 2
+	DHCPREQUEST  = 3
+	DHCPDECLINE  = 4
+	DHCPACK      = 5
+	DHCPNACK     = 6
+	DHCPRELEASE  = 7
 )
 
 const (
@@ -47,7 +47,6 @@ func (a *IPv4Address) String() string {
 	return fmt.Sprintf("%d.%d.%d.%d", a[0], a[1], a[2], a[3])
 }
 
-
 type DHCPOptions [308]byte
 
 type DHCPPacket struct {
@@ -63,7 +62,8 @@ type DHCPPacket struct {
 	Siaddr  IPv4Address // server IP address
 	Giaddr  IPv4Address // gateway IP address
 	Chaddr  [16]byte    // client hardware address
-	Bootp   [192]byte
+	Sname   [64]byte
+	File    [128]byte
 	Magic   uint32
 	Options DHCPOptions
 }
@@ -121,7 +121,7 @@ func NewDHCPDiscoverPacket() *DHCPPacket {
 		Secs:  0xffff,
 		Flags: FLAG_BROADCAST,
 		Magic: MAGIC,
-		Options: DHCPOptions{OPTION_MSG_TYPE, 1, MSG_TYPE_DISCOVER,
+		Options: DHCPOptions{OPTION_MSG_TYPE, 1, DHCPDISCOVER,
 			OPTION_END},
 	}
 
@@ -148,12 +148,12 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func getMAC(s string) (string,error) {
+func getMAC(s string) (string, error) {
 	ifaces, err := net.Interfaces()
 	checkError(err)
 	for _, i := range ifaces {
 		if i.Name == s {
-			return i.HardwareAddr.String(),nil
+			return i.HardwareAddr.String(), nil
 		}
 	}
 	return "", fmt.Errorf("%s: no such interface", s)
@@ -172,7 +172,7 @@ func main() {
 	mac := ""
 	timeout := 5 * time.Second
 
-	mac,err := getMAC(iface)
+	mac, err := getMAC(iface)
 	checkError(err)
 
 	fmt.Printf("Interface: %s [%s]\n", iface, mac)
@@ -188,7 +188,7 @@ func main() {
 	fmt.Println("Send DHCP discover\n")
 	p := NewDHCPDiscoverPacket()
 	p.parseMAC(mac)
-	err = sendUDPPacket(p, net.IPv4bcast.String() + ":67")
+	err = sendUDPPacket(p, net.IPv4bcast.String()+":67")
 	checkError(err)
 
 	t := time.Now()
