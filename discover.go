@@ -86,17 +86,17 @@ loop:
 			fmt.Print(t)
 			break
 		case dhcp.Router, dhcp.DomainNameServer:
-			for n := 0; n < length; n += 4  {
+			for n := 0; n < length; n += 4 {
 				fmt.Print(ip4(opts[i+2+n:i+6+n]), " ")
 			}
 		case dhcp.ServerIdentifier, dhcp.SubnetMask, dhcp.BroadcastAddress:
-			fmt.Print(ip4(opts[1+2:i+6]))
+			fmt.Print(ip4(opts[i+2:]))
 			break
 		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue, dhcp.RebindingTimeValue:
-			fmt.Print(b32(opts[i+2 : i+6]))
+			fmt.Print(b32(opts[i+2:]))
 			break
 		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer:
-			fmt.Print(string(opts[i+2:i+2+length]))
+			fmt.Print(string(opts[i+2 : i+2+length]))
 			break
 		case dhcp.DomainSearch:
 			fmt.Print("[TODO RFC 1035 section 4.1.4]")
