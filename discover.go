@@ -33,7 +33,7 @@ func init() {
 		dhcp.ServerIdentifier:   {4, "Server Identifier"},
 		dhcp.RenewalTimeValue:   {4, "Renewal Time Value"},
 		dhcp.RebindingTimeValue: {4, "Rebinding Time Value"},
-		dhcp.DomainSearch:       {-1, "DomainSearch"},
+		dhcp.DomainSearch:       {-1, "Domain Search"},
 		dhcp.WebProxyServer:     {-1, "Web Proxy Server"},
 	}
 }
