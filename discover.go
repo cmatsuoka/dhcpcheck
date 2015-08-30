@@ -118,7 +118,7 @@ func NewDHCPDiscoverPacket() *DHCPPacket {
 		Hlen:  6,
 		Hops:  0,
 		Xid:   rand.Uint32(),
-		Secs:  0xffff,
+		Secs:  0,
 		Flags: FLAG_BROADCAST,
 		Magic: MAGIC,
 		Options: DHCPOptions{OPTION_MSG_TYPE, 1, DHCPDISCOVER,
@@ -143,11 +143,6 @@ func checkError(err error) {
 	}
 }
 
-func usage() {
-	fmt.Fprintf(os.Stderr, "usage: %s <iface>\n", os.Args[0])
-	flag.PrintDefaults()
-}
-
 func getMAC(s string) (string, error) {
 	ifaces, err := net.Interfaces()
 	checkError(err)
@@ -159,18 +154,26 @@ func getMAC(s string) (string, error) {
 	return "", fmt.Errorf("%s: no such interface", s)
 }
 
+func usage() {
+	fmt.Fprintf(os.Stderr, "usage: %s [options]\n", os.Args[0])
+	flag.PrintDefaults()
+}
+
 func main() {
-	flag.Usage = usage
+	var iface string
+	var secs int
+
+	flag.StringVar(&iface, "i", "", "network `interface` to use")
+	flag.IntVar(&secs, "t", 5, "timeout in seconds")
 	flag.Parse()
 
-	iface := flag.Arg(0)
 	if iface == "" {
 		usage()
 		os.Exit(1)
 	}
 
 	mac := ""
-	timeout := 5 * time.Second
+	timeout := time.Duration(secs) * time.Second
 
 	mac, err := getMAC(iface)
 	checkError(err)
