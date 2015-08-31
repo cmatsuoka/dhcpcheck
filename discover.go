@@ -33,6 +33,8 @@ func init() {
 		dhcp.ServerIdentifier:   {4, "Server Identifier"},
 		dhcp.RenewalTimeValue:   {4, "Renewal Time Value"},
 		dhcp.RebindingTimeValue: {4, "Rebinding Time Value"},
+		dhcp.VendorSpecific:     {-1, "Vendor Specific"},
+		dhcp.NetBIOSNameServer:  {-1, "NetBIOS Name Server"},
 		dhcp.DomainSearch:       {-1, "Domain Search"},
 		dhcp.WebProxyServer:     {-1, "Web Proxy Server"},
 	}
@@ -85,21 +87,30 @@ loop:
 			t := opts[i+2]
 			fmt.Print(t)
 			break
-		case dhcp.Router, dhcp.DomainNameServer:
+		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
+			// Multiple IP addresses
 			for n := 0; n < length; n += 4 {
 				fmt.Print(ip4(opts[i+2+n:i+6+n]), " ")
 			}
 		case dhcp.ServerIdentifier, dhcp.SubnetMask, dhcp.BroadcastAddress:
+			// Single IP address
 			fmt.Print(ip4(opts[i+2:]))
 			break
 		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue, dhcp.RebindingTimeValue:
+			// 32-bit integer
 			fmt.Print(b32(opts[i+2:]))
 			break
 		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer:
+			// String
 			fmt.Print(string(opts[i+2 : i+2+length]))
 			break
 		case dhcp.DomainSearch:
+			// Compressed domain names (RFC 1035)
 			fmt.Print("[TODO RFC 1035 section 4.1.4]")
+			break
+		case dhcp.VendorSpecific:
+			// Size only
+			fmt.Printf("(%d bytes)", length)
 			break
 		}
 		fmt.Println()
@@ -172,10 +183,8 @@ func main() {
 	p := dhcp.NewDiscoverPacket()
 	p.ParseMAC(mac)
 
-	fmt.Println("\nSend DHCP discover")
+	fmt.Println("\n>>> Send DHCP discover")
 	showPacket(&p.Packet)
-	fmt.Println()
-
 	err = p.Send()
 	checkError(err)
 
@@ -187,7 +196,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			break
 		}
-		fmt.Println("Receive DHCP offer from", remote.IP.String())
+		fmt.Println("\n<<< Receive DHCP offer from", remote.IP.String())
 		showPacket(&o)
 	}
 	fmt.Println("No more offers.")

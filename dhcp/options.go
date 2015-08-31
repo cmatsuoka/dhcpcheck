@@ -53,27 +53,27 @@ const (
 	TCPKeepaliveGarbage  = 39
 
 	// Application and Service Parameters
-	NISDomain                 = 40
-	NISServers                = 41
-	NTPServers                = 42
-	VendorSpecificInformation = 43
-	NetBIOSNameServer         = 44
-	NetBIOSDatagramServer     = 45
-	NetBIOSNodeType           = 46
-	NetBIOSScope              = 47
-	XFontServer               = 48
-	XDisplayManager           = 49
-	NISPlusDomain             = 64
-	NISPlusServers            = 65
-	MobileIPHomeAgent         = 68
-	SMTPServer                = 69
-	POP3Server                = 70
-	NNTPServer                = 71
-	DefaultWWWServer          = 72
-	DefaultFingerServer       = 73
-	DefaultIRCServer          = 74
-	StreetTalkServer          = 75
-	STDAServer                = 76
+	NISDomain             = 40
+	NISServers            = 41
+	NTPServers            = 42
+	VendorSpecific        = 43
+	NetBIOSNameServer     = 44
+	NetBIOSDatagramServer = 45
+	NetBIOSNodeType       = 46
+	NetBIOSScope          = 47
+	XFontServer           = 48
+	XDisplayManager       = 49
+	NISPlusDomain         = 64
+	NISPlusServers        = 65
+	MobileIPHomeAgent     = 68
+	SMTPServer            = 69
+	POP3Server            = 70
+	NNTPServer            = 71
+	DefaultWWWServer      = 72
+	DefaultFingerServer   = 73
+	DefaultIRCServer      = 74
+	StreetTalkServer      = 75
+	STDAServer            = 76
 
 	// DHCP Extensions
 	RequestedIPAddress     = 50
