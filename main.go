@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+
+func checkError(err error) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		os.Exit(1)
+	}
+}
+
 func usage() {
 	fmt.Fprintf(os.Stderr, "usage: %s [options]\n", os.Args[0])
 	flag.PrintDefaults()
