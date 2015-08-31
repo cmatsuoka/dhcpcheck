@@ -4,7 +4,6 @@ import (
 	"./dhcp"
 	"bytes"
 	"encoding/binary"
-	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -156,26 +155,7 @@ func getMAC(s string) (string, error) {
 	return "", fmt.Errorf("%s: no such interface", s)
 }
 
-func usage() {
-	fmt.Fprintf(os.Stderr, "usage: %s [options]\n", os.Args[0])
-	flag.PrintDefaults()
-}
-
-func main() {
-	var iface string
-	var secs int
-
-	flag.StringVar(&iface, "i", "", "network `interface` to use")
-	flag.IntVar(&secs, "t", 5, "timeout in seconds")
-	flag.Parse()
-
-	if iface == "" {
-		usage()
-		os.Exit(1)
-	}
-
-	mac := ""
-	timeout := time.Duration(secs) * time.Second
+func discover(iface string, timeout time.Duration) {
 
 	mac, err := getMAC(iface)
 	checkError(err)
