@@ -17,6 +17,7 @@ type option struct {
 }
 
 var options map[byte]option
+var messageType map[byte]string
 
 func init() {
 	options = map[byte]option{
@@ -37,6 +38,16 @@ func init() {
 		dhcp.NetBIOSNameServer:  {-1, "NetBIOS Name Server"},
 		dhcp.DomainSearch:       {-1, "Domain Search"},
 		dhcp.WebProxyServer:     {-1, "Web Proxy Server"},
+	}
+
+	messageType = map[byte]string{
+		dhcp.DHCPDiscover: "DHCPDISCOVER",
+		dhcp.DHCPOffer:    "DHCPOFFER",
+		dhcp.DHCPRequest:  "DHCPREQUEST",
+		dhcp.DHCPDecline:  "DHCPDECLINE",
+		dhcp.DHCPAck:      "DHCPACK",
+		dhcp.DHCPNack:     "DHCPNACK",
+		dhcp.DHCPRelease:  "DHCPRELEASE",
 	}
 }
 
@@ -84,8 +95,7 @@ loop:
 
 		switch o {
 		case dhcp.DHCPMessageType:
-			t := opts[i+2]
-			fmt.Print(t)
+			fmt.Print(messageType[opts[i+2]])
 			break
 		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
 			// Multiple IP addresses
