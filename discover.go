@@ -68,8 +68,8 @@ func parseOptions(p *dhcp.Packet) {
 	opts := p.Options
 	fmt.Println("Options:")
 loop:
-	for i := 0; i < len(opts); i++ {
-		o := opts[i]
+	for i := 0; i < len(opts); {
+		o := opts[i]; i++
 
 		switch o {
 		case dhcp.EndOption:
@@ -79,7 +79,7 @@ loop:
 			continue
 		}
 
-		length := int(opts[i+1])
+		length := int(opts[i]); i++
 		_, ok := options[o]
 		if ok && options[o].Len >= 0 && options[o].Len != length {
 			fmt.Printf("corrupted option (%d,%d)\n",
@@ -95,24 +95,24 @@ loop:
 
 		switch o {
 		case dhcp.DHCPMessageType:
-			fmt.Print(messageType[opts[i+2]])
+			fmt.Print(messageType[opts[i]])
 			break
 		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
 			// Multiple IP addresses
 			for n := 0; n < length; n += 4 {
-				fmt.Print(ip4(opts[i+2+n:i+6+n]), " ")
+				fmt.Print(ip4(opts[i+n:i+4+n]), " ")
 			}
 		case dhcp.ServerIdentifier, dhcp.SubnetMask, dhcp.BroadcastAddress:
 			// Single IP address
-			fmt.Print(ip4(opts[i+2:]))
+			fmt.Print(ip4(opts[i:]))
 			break
 		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue, dhcp.RebindingTimeValue:
 			// 32-bit integer
-			fmt.Print(b32(opts[i+2:]))
+			fmt.Print(b32(opts[i:]))
 			break
 		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer:
 			// String
-			fmt.Print(string(opts[i+2 : i+2+length]))
+			fmt.Print(string(opts[i : i+length]))
 			break
 		case dhcp.DomainSearch:
 			// Compressed domain names (RFC 1035)
@@ -125,7 +125,7 @@ loop:
 		}
 		fmt.Println()
 
-		i += 1 + length
+		i += length
 	}
 }
 
