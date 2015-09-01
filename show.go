@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+
+	"github.com/cmatsuoka/dncomp"
 )
 
 type option struct {
@@ -94,32 +96,34 @@ loop:
 		switch o {
 		case dhcp.DHCPMessageType:
 			fmt.Print(messageType[opts[i]])
-			break
+
 		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
 			// Multiple IP addresses
 			for n := 0; n < length; n += 4 {
 				fmt.Print(ip4(opts[i+n:i+4+n]), " ")
 			}
+
 		case dhcp.ServerIdentifier, dhcp.SubnetMask, dhcp.BroadcastAddress:
 			// Single IP address
 			fmt.Print(ip4(opts[i:]))
-			break
+
 		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue, dhcp.RebindingTimeValue:
 			// 32-bit integer
 			fmt.Print(b32(opts[i:]))
-			break
+
 		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer:
 			// String
 			fmt.Print(string(opts[i : i+length]))
-			break
+
 		case dhcp.DomainSearch:
 			// Compressed domain names (RFC 1035)
-			fmt.Print("[TODO RFC 1035 section 4.1.4]")
-			break
+			if s, err := dncomp.Decode(opts[i : i+length]); err != nil {
+				fmt.Print(s)
+			}
+
 		case dhcp.VendorSpecific:
 			// Size only
 			fmt.Printf("(%d bytes)", length)
-			break
 		}
 		fmt.Println()
 
