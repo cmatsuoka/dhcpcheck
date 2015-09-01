@@ -39,14 +39,13 @@ func discover(iface string, timeout time.Duration) {
 	p.ParseMAC(mac)
 
 	fmt.Println("\n>>> Send DHCP discover")
-	showPacket(&p.Packet)
-	err = p.Send()
+	showPacket(p)
+	err = dhcp.Broadcast(p)
 	checkError(err)
 
 	t := time.Now()
 	for time.Since(t) < timeout {
-		var o dhcp.Packet
-		remote, err := o.Receive(conn, timeout)
+		o, remote, err := dhcp.Receive(conn, timeout)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			break

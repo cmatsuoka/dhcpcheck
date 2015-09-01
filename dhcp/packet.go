@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math/rand"
 	"net"
-	"time"
 )
 
 const (
-	BOOTREQUEST = 1
-	BOOTREPLY   = 2
+	BootRequest = 1
+	BootReply   = 2
 )
 
 const (
@@ -24,13 +24,13 @@ const (
 )
 
 const (
-	FLAG_BROADCAST = 1 << 15
+	FlagBroadcast = 1 << 15
 )
 
 const (
-	PACKET_SIZE    = 548
-	HTYPE_ETHERNET = 1
-	MAGIC          = 0x63825363
+	packetSize    = 548
+	magic         = 0x63825363
+	HtypeEthernet = 1
 )
 
 type IPv4Address [4]byte
@@ -60,7 +60,6 @@ type Packet struct {
 	Options OptionsArea
 }
 
-
 func (p *Packet) ParseMAC(s string) error {
 	hw, err := net.ParseMAC(s)
 	if err == nil {
@@ -69,24 +68,29 @@ func (p *Packet) ParseMAC(s string) error {
 	return err
 }
 
-func (p *Packet) Send(conn net.Conn) error {
-	var buffer bytes.Buffer
-	err := binary.Write(&buffer, binary.BigEndian, *p)
-	if err != nil {
-		return err
-	}
-	_, err = conn.Write(buffer.Bytes())
-	return err
+func (p Packet) Serialize() ([]byte, error) {
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.BigEndian, p)
+	return buf.Bytes(), err
 }
 
-func (p *Packet) Receive(conn *net.UDPConn, timeout time.Duration) (*net.UDPAddr, error) {
-	conn.SetReadDeadline(time.Now().Add(timeout))
-	var b [1024]byte
-	_, remote, err := conn.ReadFromUDP(b[:])
-	if err != nil {
-		return remote, err
-	}
-	err = binary.Read(bytes.NewReader(b[:]), binary.BigEndian, p)
-	return remote, err
+func (p *Packet) Deserialize(data []byte) error {
+	return binary.Read(bytes.NewReader(data), binary.BigEndian, p)
 }
 
+func NewDiscoverPacket() *Packet {
+	p := &Packet{
+		Op:    BootRequest,
+		Htype: HtypeEthernet,
+		Hlen:  6,
+		Hops:  0,
+		Xid:   rand.Uint32(),
+		Secs:  0,
+		Flags: FlagBroadcast,
+		Magic: magic,
+		Options: OptionsArea{DHCPMessageType, 1, DHCPDiscover,
+			EndOption},
+	}
+
+	return p
+}
