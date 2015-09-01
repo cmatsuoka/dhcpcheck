@@ -47,25 +47,26 @@ func init() {
 	}
 }
 
-func b32(data []byte) uint32 {
-	buf := bytes.NewBuffer(data)
-	var x uint32
-	binary.Read(buf, binary.BigEndian, &x)
-	return x
-}
-
-func ip4(data []byte) string {
-	var ip dhcp.IPv4Address
-	copy(ip[:], data[0:4])
-	return ip.String()
-}
-
 func showOptions(p *dhcp.Packet) {
+	b32 := func(data []byte) uint32 {
+		buf := bytes.NewBuffer(data)
+		var x uint32
+		binary.Read(buf, binary.BigEndian, &x)
+		return x
+	}
+
+	ip4 := func(data []byte) string {
+		var ip dhcp.IPv4Address
+		copy(ip[:], data[0:4])
+		return ip.String()
+	}
+
 	opts := p.Options
 	fmt.Println("Options:")
 loop:
 	for i := 0; i < len(opts); {
-		o := opts[i]; i++
+		o := opts[i]
+		i++
 
 		switch o {
 		case dhcp.EndOption:
@@ -75,7 +76,8 @@ loop:
 			continue
 		}
 
-		length := int(opts[i]); i++
+		length := int(opts[i])
+		i++
 		_, ok := options[o]
 		if ok && options[o].Len >= 0 && options[o].Len != length {
 			fmt.Printf("corrupted option (%d,%d)\n",
