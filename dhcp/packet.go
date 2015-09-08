@@ -80,24 +80,27 @@ type Packet struct {
 	Options OptionsArea
 }
 
-func (p *Packet) ParseMAC(s string) error {
-	hw, err := net.ParseMAC(s)
+func (p Packet) serialize() ([]byte, error) {
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.BigEndian, p)
+	return buf.Bytes(), err
+}
+
+func (p *Packet) deserialize(data []byte) error {
+	return binary.Read(bytes.NewReader(data), binary.BigEndian, p)
+}
+
+// SetClientMAC takes a MAC address and sets the client hardware address
+// field of the DHCP packet.
+func (p *Packet) SetClientMAC(mac string) error {
+	hw, err := net.ParseMAC(mac)
 	if err == nil {
 		copy(p.Chaddr[0:6], hw)
 	}
 	return err
 }
 
-func (p Packet) Serialize() ([]byte, error) {
-	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, p)
-	return buf.Bytes(), err
-}
-
-func (p *Packet) Deserialize(data []byte) error {
-	return binary.Read(bytes.NewReader(data), binary.BigEndian, p)
-}
-
+// NewDiscoverPacket builds a new DHCPDISCOVER packet.
 func NewDiscoverPacket() *Packet {
 	p := &Packet{
 		Op:    BootRequest,

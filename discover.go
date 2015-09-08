@@ -51,7 +51,7 @@ func discover(iface string, timeout time.Duration) {
 
 	// Send discover packet
 	p := dhcp.NewDiscoverPacket()
-	p.ParseMAC(mac)
+	p.SetClientMAC(mac)
 
 	fmt.Println("\n>>> Send DHCP discover")
 	showPacket(p)
