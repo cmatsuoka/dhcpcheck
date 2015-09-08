@@ -19,7 +19,9 @@ func Send(conn net.Conn, p *Packet) error {
 func Receive(conn *net.UDPConn, timeout time.Duration) (Packet, *net.UDPAddr, error) {
 	var p Packet
 	b := make([]byte, 1024)
-	conn.SetReadDeadline(time.Now().Add(timeout))
+	if timeout > 0 {
+		conn.SetReadDeadline(time.Now().Add(timeout))
+	}
 	_, remote, err := conn.ReadFromUDP(b)
 	if err != nil {
 		return p, remote, err

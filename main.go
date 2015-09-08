@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
 	"os"
-	"time"
 )
 
 type command struct {
@@ -17,25 +17,19 @@ var cmd []command
 func init() {
 	cmd = []command{
 		{"discover", cmdDiscover},
+		{"snoop", cmdSnoop},
 	}
 }
 
-func cmdDiscover() {
-	var iface string
-	var secs int
-
-	flag.StringVar(&iface, "i", "", "network `interface` to use")
-	flag.IntVar(&secs, "t", 5, "timeout in seconds")
-	flag.Parse()
-
-	if iface == "" {
-		usage(os.Args[1])
-		os.Exit(1)
+func getMAC(s string) (string, error) {
+	ifaces, err := net.Interfaces()
+	checkError(err)
+	for _, i := range ifaces {
+		if i.Name == s {
+			return i.HardwareAddr.String(), nil
+		}
 	}
-
-	timeout := time.Duration(secs) * time.Second
-
-	discover(iface, timeout)
+	return "", fmt.Errorf("%s: no such interface", s)
 }
 
 func checkError(err error) {
