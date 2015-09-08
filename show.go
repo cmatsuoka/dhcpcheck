@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/cmatsuoka/dncomp"
+	"github.com/cmatsuoka/go-ouitools"
 )
 
 type option struct {
@@ -16,6 +17,7 @@ type option struct {
 
 var options map[byte]option
 var messageType map[byte]string
+var db *ouidb.OuiDb
 
 func init() {
 	options = map[byte]option{
@@ -47,6 +49,8 @@ func init() {
 		dhcp.DHCPNack:     "DHCPNACK",
 		dhcp.DHCPRelease:  "DHCPRELEASE",
 	}
+
+	db = ouidb.New("oui.txt")
 }
 
 func showOptions(p *dhcp.Packet) {
@@ -132,10 +136,20 @@ loop:
 }
 
 func showPacket(p *dhcp.Packet) {
-	fmt.Println("Client IP address :", p.Ciaddr.String())
-	fmt.Println("Your IP address   :", p.Yiaddr.String())
-	fmt.Println("Server IP address :", p.Siaddr.String())
-	fmt.Println("Relay IP address  :", p.Giaddr.String())
+	fmt.Printf("Transaction ID    : %#08x\n", p.Xid)
+	fmt.Printf("Client IP address : %s\n", p.Ciaddr.String())
+	fmt.Printf("Your IP address   : %s\n", p.Yiaddr.String())
+	fmt.Printf("Server IP address : %s\n", p.Siaddr.String())
+	fmt.Printf("Relay IP address  : %s\n", p.Giaddr.String())
+
+	mac := p.Chaddr.MACAddress().String()
+	vendor := ""
+
+	if db != nil {
+		vendor, _ = db.VendorLookup(mac)
+	}
+
+	fmt.Printf("Client MAC address: %s (%s)\n", mac, vendor)
 	showOptions(p)
 	fmt.Println()
 }

@@ -39,6 +39,21 @@ func (a *IPv4Address) String() string {
 	return fmt.Sprintf("%d.%d.%d.%d", a[0], a[1], a[2], a[3])
 }
 
+type MACAddress [6]byte
+
+func (a *MACAddress) String() string {
+	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
+		a[0], a[1], a[2], a[3], a[4], a[5])
+}
+
+type HWAddress [16]byte
+
+func (a *HWAddress) MACAddress() *MACAddress {
+	var mac MACAddress
+	copy(mac[:], a[:6])
+	return &mac
+}
+
 type OptionsArea [308]byte
 
 type Packet struct {
@@ -53,7 +68,7 @@ type Packet struct {
 	Yiaddr  IPv4Address // your IP address
 	Siaddr  IPv4Address // server IP address
 	Giaddr  IPv4Address // gateway IP address
-	Chaddr  [16]byte    // client hardware address
+	Chaddr  HWAddress   // client hardware address
 	Sname   [64]byte
 	File    [128]byte
 	Magic   uint32
