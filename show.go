@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/cmatsuoka/dncomp"
-	"github.com/cmatsuoka/go-ouitools"
 )
 
 type option struct {
@@ -17,7 +16,6 @@ type option struct {
 
 var options map[byte]option
 var messageType map[byte]string
-var db *ouidb.OuiDb
 
 func init() {
 	options = map[byte]option{
@@ -48,11 +46,6 @@ func init() {
 		dhcp.DHCPAck:      "DHCPACK",
 		dhcp.DHCPNack:     "DHCPNACK",
 		dhcp.DHCPRelease:  "DHCPRELEASE",
-	}
-
-	db = ouidb.New("/etc/manuf")
-	if db == nil {
-		db = ouidb.New("manuf")
 	}
 }
 
@@ -107,7 +100,10 @@ loop:
 		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
 			// Multiple IP addresses
 			for n := 0; n < length; n += 4 {
-				fmt.Print(ip4(opts[i+n:i+4+n]), " ")
+				if n > 0 {
+					fmt.Print(", ")
+				}
+				fmt.Print(ip4(opts[i+n : i+4+n]))
 			}
 
 		case dhcp.ServerIdentifier, dhcp.SubnetMask, dhcp.BroadcastAddress:
@@ -144,15 +140,9 @@ func showPacket(p *dhcp.Packet) {
 	fmt.Printf("Your IP address   : %s\n", p.Yiaddr.String())
 	fmt.Printf("Server IP address : %s\n", p.Siaddr.String())
 	fmt.Printf("Relay IP address  : %s\n", p.Giaddr.String())
+	fmt.Printf("Client MAC address: %s\n", p.Chaddr.MACAddress().String())
 
-	mac := p.Chaddr.MACAddress().String()
-	vendor := ""
-
-	if db != nil {
-		vendor, _ = db.VendorLookup(mac)
-	}
-
-	fmt.Printf("Client MAC address: %s (%s)\n", mac, vendor)
 	showOptions(p)
+
 	fmt.Println()
 }

@@ -67,7 +67,10 @@ func discover(iface string, timeout time.Duration) {
 				break
 			}
 			if o.Xid == p.Xid {
-				fmt.Printf("\n<<< Receive DHCP offer from %s (%s)\n", remote.IP.String(), getName(remote.IP.String()))
+				ip := remote.IP.String()
+				mac := getMACFromIP(ip)
+				fmt.Printf("\n<<< Receive DHCP offer from %s (%s)\n", ip, getName(ip))
+				fmt.Printf("    MAC address: %s (%s)\n", mac, getVendor(mac))
 				showPacket(&o)
 			}
 		}

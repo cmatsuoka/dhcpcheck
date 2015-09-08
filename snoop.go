@@ -42,7 +42,10 @@ func snoop(iface string) {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			continue
 		}
-		fmt.Println("\n<<< Receive packet from", remote.IP.String())
+		ip := remote.IP.String()
+		mac := getMACFromIP(ip)
+		fmt.Printf("\n<<< Receive packet from %s (%s)\n", ip, getName(ip))
+		fmt.Printf("    MAC address: %s (%s)\n", mac, getVendor(mac))
 		showPacket(&o)
 	}
 }

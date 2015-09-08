@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
 	"os"
 )
 
@@ -19,25 +18,6 @@ func init() {
 		{"discover", cmdDiscover},
 		{"snoop", cmdSnoop},
 	}
-}
-
-func getMAC(s string) (string, error) {
-	ifaces, err := net.Interfaces()
-	checkError(err)
-	for _, i := range ifaces {
-		if i.Name == s {
-			return i.HardwareAddr.String(), nil
-		}
-	}
-	return "", fmt.Errorf("%s: no such interface", s)
-}
-
-func getName(addr string) string {
-	names, err := net.LookupAddr(addr)
-	if err != nil {
-		return ""
-	}
-	return names[0]
 }
 
 func checkError(err error) {
