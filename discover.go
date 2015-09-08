@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-
 func getMAC(s string) (string, error) {
 	ifaces, err := net.Interfaces()
 	checkError(err)
@@ -50,8 +49,10 @@ func discover(iface string, timeout time.Duration) {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			break
 		}
-		fmt.Println("\n<<< Receive DHCP offer from", remote.IP.String())
-		showPacket(&o)
+		if o.Xid == p.Xid {
+			fmt.Println("\n<<< Receive DHCP offer from", remote.IP.String())
+			showPacket(&o)
+		}
 	}
 	fmt.Println("No more offers.")
 }

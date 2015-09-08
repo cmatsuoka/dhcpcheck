@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"time"
 )
 
 const (
@@ -32,6 +33,10 @@ const (
 	magic         = 0x63825363
 	HtypeEthernet = 1
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 type IPv4Address [4]byte
 
