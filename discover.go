@@ -67,7 +67,7 @@ func discover(iface string, timeout time.Duration) {
 				break
 			}
 			if o.Xid == p.Xid {
-				fmt.Println("\n<<< Receive DHCP offer from", remote.IP.String())
+				fmt.Printf("\n<<< Receive DHCP offer from %s (%s)\n", remote.IP.String(), getName(remote.IP.String()))
 				showPacket(&o)
 			}
 		}

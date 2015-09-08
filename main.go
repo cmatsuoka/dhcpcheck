@@ -32,6 +32,14 @@ func getMAC(s string) (string, error) {
 	return "", fmt.Errorf("%s: no such interface", s)
 }
 
+func getName(addr string) string {
+	names, err := net.LookupAddr(addr)
+	if err != nil {
+		return ""
+	}
+	return names[0]
+}
+
 func checkError(err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
