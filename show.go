@@ -50,7 +50,10 @@ func init() {
 		dhcp.DHCPRelease:  "DHCPRELEASE",
 	}
 
-	db = ouidb.New("oui.txt")
+	db = ouidb.New("/etc/manuf")
+	if db == nil {
+		db = ouidb.New("manuf")
+	}
 }
 
 func showOptions(p *dhcp.Packet) {
