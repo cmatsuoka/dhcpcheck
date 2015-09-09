@@ -4,7 +4,6 @@ import (
 	"./dhcp"
 	"flag"
 	"fmt"
-	"net"
 	"os"
 	"time"
 )
@@ -39,14 +38,15 @@ func discover(iface string, timeout time.Duration) {
 
 	fmt.Printf("Interface: %s [%s]\n", iface, mac)
 
-	var conn *net.UDPConn
-	if timeout > 0 {
-		// Set up server
-		addr, err := net.ResolveUDPAddr("udp4", ":68")
+	var client *dhcp.Client
+
+	if timeout <= 0 {
+		client, err = dhcp.NewClientNotListening()
 		checkError(err)
-		conn, err = net.ListenUDP("udp4", addr)
+	} else {
+		client, err = dhcp.NewClient()
 		checkError(err)
-		defer conn.Close()
+		defer client.Close()
 	}
 
 	// Send discover packet
@@ -55,25 +55,30 @@ func discover(iface string, timeout time.Duration) {
 
 	fmt.Println("\n>>> Send DHCP discover")
 	showPacket(p)
-	err = dhcp.Broadcast(p)
+	err = client.Broadcast(p)
 	checkError(err)
 
-	if timeout > 0 {
-		t := time.Now()
-		for time.Since(t) < timeout {
-			o, remote, err := dhcp.Receive(conn, timeout)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", err.Error())
-				break
-			}
-			if o.Xid == p.Xid {
-				ip := remote.IP.String()
-				mac := getMACFromIP(ip)
-				fmt.Printf("\n<<< Receive DHCP offer from %s (%s)\n", ip, getName(ip))
-				fmt.Printf("    MAC address: %s (%s)\n", mac, getVendor(mac))
-				showPacket(&o)
-			}
-		}
-		fmt.Println("No more offers.")
+	if timeout <= 0 {
+		return
 	}
+
+	t := time.Now()
+	for time.Since(t) < timeout {
+		o, remote, err := client.Receive(timeout)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+			break
+		}
+		if o.Xid == p.Xid {
+			ip := remote.IP.String()
+			mac := getMACFromIP(ip)
+			fmt.Printf("\n<<< Receive DHCP offer from %s (%s)\n",
+				ip, getName(ip))
+			fmt.Printf("    MAC address: %s (%s)\n",
+				mac, getVendor(mac))
+
+			showPacket(&o)
+		}
+	}
+	fmt.Println("No more offers.")
 }

@@ -4,7 +4,6 @@ import (
 	"./dhcp"
 	"flag"
 	"fmt"
-	"net"
 	"os"
 )
 
@@ -30,14 +29,12 @@ func snoop(iface string) {
 	fmt.Printf("Interface: %s [%s]\n", iface, mac)
 
 	// Set up server
-	addr, err := net.ResolveUDPAddr("udp4", ":68")
+	client, err := dhcp.NewClient()
 	checkError(err)
-	conn, err := net.ListenUDP("udp4", addr)
-	checkError(err)
-	defer conn.Close()
+	defer client.Close()
 
 	for {
-		o, remote, err := dhcp.Receive(conn, -1)
+		o, remote, err := client.Receive(-1)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			continue
