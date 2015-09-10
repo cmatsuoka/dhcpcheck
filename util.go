@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/cmatsuoka/go-ouitools"
+	"github.com/cmatsuoka/ouidb"
 	"github.com/mostlygeek/arp"
 )
 
-var db *ouidb.OuiDb
+var db *ouidb.OuiDB
 
 func init() {
 	db = ouidb.New("/etc/manuf")
@@ -42,7 +42,7 @@ func getMACFromIP(addr string) string {
 }
 
 func getVendor(mac string) string {
-	v, _ := db.VendorLookup(mac)
+	v, _ := db.Lookup(mac)
 	return v
 
 }
