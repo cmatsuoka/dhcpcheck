@@ -40,6 +40,7 @@ func init() {
 		dhcp.ParameterRequestList:  {-1, "Parameter Request List"},
 		dhcp.ClientIdentifier:      {-1, "Client Identifier"},
 		dhcp.DomainSearch:          {-1, "Domain Search"},
+		dhcp.UserClass:             {-1, "User Class"},
 		dhcp.ClientFQDN:            {-1, "Client FQDN"},
 		dhcp.WebProxyServer:        {-1, "Web Proxy Server"},
 	}
@@ -189,6 +190,17 @@ loop:
 		case dhcp.VendorSpecific, dhcp.VendorClassIdentifier:
 			// Dump data
 			fmt.Printf("%q", opts[i:i+length])
+
+		case dhcp.UserClass:
+			// Multi-dump
+			for j := i; ; {
+				l := int(opts[i])
+				if j > i {
+					fmt.Printf("\n%24s   ", "")
+				}
+				fmt.Printf("%q", string(opts[j:j+l]))
+				j += l + 1
+			}
 
 		case dhcp.ParameterRequestList:
 			// Parameter list

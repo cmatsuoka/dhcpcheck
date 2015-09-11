@@ -91,6 +91,9 @@ const (
 	VendorClassIdentifier = 60
 	ClientIdentifier      = 61
 
+	// RFC 3004
+	UserClass = 77
+
 	// RFC 4702
 	ClientFQDN = 81
 
