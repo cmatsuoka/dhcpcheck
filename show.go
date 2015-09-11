@@ -51,6 +51,7 @@ func init() {
 		dhcp.DHCPAck:      "DHCPACK",
 		dhcp.DHCPNack:     "DHCPNACK",
 		dhcp.DHCPRelease:  "DHCPRELEASE",
+		dhcp.DHCPInform:   "DHCPINFORM",
 	}
 }
 
@@ -80,7 +81,6 @@ func printData(b []byte) {
 		for _, c := range b {
 			fmt.Printf("%02x ", c)
 		}
-		fmt.Println()
 	}
 }
 
@@ -130,7 +130,7 @@ loop:
 
 		switch o {
 		case dhcp.DHCPMessageType:
-			fmt.Print(messageType[opts[i]])
+			fmt.Printf("%02x %s", opts[i], messageType[opts[i]])
 
 		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
 			// Multiple IP addresses
@@ -163,9 +163,9 @@ loop:
 			// Types according to RFC 1700
 			switch opts[i] {
 			case 1:
-				fmt.Println(macAddress(opts[i+1 : i+7]))
+				fmt.Print(macAddress(opts[i+1 : i+7]))
 			default:
-				fmt.Printf("type %d (len %d)\n", opts[i], length-1)
+				fmt.Printf("type %d (len %d)", opts[i], length-1)
 			}
 
 		case dhcp.VendorSpecific, dhcp.VendorClassIdentifier:
@@ -180,7 +180,6 @@ loop:
 				}
 				fmt.Printf("%02x %s", p, options[p].Name)
 			}
-			fmt.Println()
 		}
 		fmt.Println()
 

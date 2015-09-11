@@ -22,6 +22,7 @@ const (
 	DHCPAck      = 5
 	DHCPNack     = 6
 	DHCPRelease  = 7
+	DHCPInform   = 8
 )
 
 const (
