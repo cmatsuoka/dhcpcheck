@@ -34,6 +34,7 @@ func init() {
 		dhcp.RebindingTimeValue: {4, "Rebinding Time Value"},
 		dhcp.VendorSpecific:     {-1, "Vendor Specific"},
 		dhcp.NetBIOSNameServer:  {-1, "NetBIOS Name Server"},
+		dhcp.ClientIdentifier:   {-1, "Client Identifier"},
 		dhcp.DomainSearch:       {-1, "Domain Search"},
 		dhcp.WebProxyServer:     {-1, "Web Proxy Server"},
 	}
@@ -47,6 +48,18 @@ func init() {
 		dhcp.DHCPNack:     "DHCPNACK",
 		dhcp.DHCPRelease:  "DHCPRELEASE",
 	}
+}
+
+func macAddress(b []byte) string {
+	var buf bytes.Buffer
+	for i := range(b) {
+		if i > 0 {
+			buf.WriteString(":")
+		}
+		buf.WriteString(fmt.Sprintf("%02x", b[i]))
+	}
+
+	return buf.String()
 }
 
 func showOptions(p *dhcp.Packet) {
@@ -124,9 +137,19 @@ loop:
 				fmt.Print(s)
 			}
 
+		case dhcp.ClientIdentifier:
+			// Types according to RFC 1700
+			switch opts[i] {
+			case 1:
+				fmt.Println(macAddress(opts[i+1:i+7]))
+			default:
+				fmt.Printf("type %d (len %d)\n", opts[i], length - 1)
+			}
+
 		case dhcp.VendorSpecific:
-			// Size only
-			fmt.Printf("(%d bytes)", length)
+			// Dump data
+			fmt.Println(opts[i:i+length])
+
 		}
 		fmt.Println()
 
@@ -140,7 +163,9 @@ func showPacket(p *dhcp.Packet) {
 	fmt.Printf("Your IP address   : %s\n", p.Yiaddr.String())
 	fmt.Printf("Server IP address : %s\n", p.Siaddr.String())
 	fmt.Printf("Relay IP address  : %s\n", p.Giaddr.String())
-	fmt.Printf("Client MAC address: %s\n", p.Chaddr.MACAddress().String())
+
+	mac := p.Chaddr.MACAddress().String()
+	fmt.Printf("Client MAC address: %s (%s)\n", mac, getVendor(mac))
 
 	showOptions(p)
 

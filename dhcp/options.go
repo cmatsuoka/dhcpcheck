@@ -91,7 +91,7 @@ const (
 	VendorClassIdentifier  = 60
 	ClientIdentifier       = 61
 
-	// RFC3397
+	// RFC 3397
 	DomainSearch = 119
 
 	// Web Proxy Auto-Discovery Protocol (ietf-wrec-wpad-01)
