@@ -34,6 +34,7 @@ func init() {
 		dhcp.RebindingTimeValue: {4, "Rebinding Time Value"},
 		dhcp.VendorSpecific:     {-1, "Vendor Specific"},
 		dhcp.NetBIOSNameServer:  {-1, "NetBIOS Name Server"},
+		dhcp.RequestedIPAddress: {-1, "Requested IP Address"},
 		dhcp.ClientIdentifier:   {-1, "Client Identifier"},
 		dhcp.DomainSearch:       {-1, "Domain Search"},
 		dhcp.WebProxyServer:     {-1, "Web Proxy Server"},
@@ -119,7 +120,7 @@ loop:
 				fmt.Print(ip4(opts[i+n : i+4+n]))
 			}
 
-		case dhcp.ServerIdentifier, dhcp.SubnetMask, dhcp.BroadcastAddress:
+		case dhcp.ServerIdentifier, dhcp.SubnetMask, dhcp.BroadcastAddress, dhcp.RequestedIPAddress:
 			// Single IP address
 			fmt.Print(ip4(opts[i:]))
 
