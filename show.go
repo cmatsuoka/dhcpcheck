@@ -20,30 +20,33 @@ var messageType map[byte]string
 
 func init() {
 	options = map[byte]option{
-		dhcp.PadOption:             {0, "Pad Option"},
-		dhcp.Router:                {-1, "Router"},
-		dhcp.SubnetMask:            {4, "Subnet Mask"},
-		dhcp.DomainNameServer:      {-1, "Domain Name Server"},
-		dhcp.HostName:              {-1, "Host Name"},
-		dhcp.DomainName:            {-1, "Domain Name"},
-		dhcp.BroadcastAddress:      {4, "Broadcast Address"},
-		dhcp.StaticRoute:           {-1, "Static Route"},
-		dhcp.IPAddressLeaseTime:    {4, "IP Address Lease Time"},
-		dhcp.DHCPMessageType:       {1, "DHCP Message Type"},
-		dhcp.ServerIdentifier:      {4, "Server Identifier"},
-		dhcp.RenewalTimeValue:      {4, "Renewal Time Value"},
-		dhcp.RebindingTimeValue:    {4, "Rebinding Time Value"},
-		dhcp.VendorSpecific:        {-1, "Vendor Specific"},
-		dhcp.NetBIOSNameServer:     {-1, "NetBIOS Name Server"},
-		dhcp.RequestedIPAddress:    {-1, "Requested IP Address"},
-		dhcp.VendorClassIdentifier: {-1, "Vendor Class Identifier"},
-		dhcp.MaxDHCPMessageSize:    {2, "Max DHCP Message Size"},
-		dhcp.ParameterRequestList:  {-1, "Parameter Request List"},
-		dhcp.ClientIdentifier:      {-1, "Client Identifier"},
-		dhcp.DomainSearch:          {-1, "Domain Search"},
-		dhcp.UserClass:             {-1, "User Class"},
-		dhcp.ClientFQDN:            {-1, "Client FQDN"},
-		dhcp.WebProxyServer:        {-1, "Web Proxy Server"},
+		dhcp.PadOption:              {0, "Pad Option"},
+		dhcp.Router:                 {-1, "Router"},
+		dhcp.SubnetMask:             {4, "Subnet Mask"},
+		dhcp.DomainNameServer:       {-1, "Domain Name Server"},
+		dhcp.HostName:               {-1, "Host Name"},
+		dhcp.DomainName:             {-1, "Domain Name"},
+		dhcp.BroadcastAddress:       {4, "Broadcast Address"},
+		dhcp.StaticRoute:            {-1, "Static Route"},
+		dhcp.IPAddressLeaseTime:     {4, "IP Address Lease Time"},
+		dhcp.DHCPMessageType:        {1, "DHCP Message Type"},
+		dhcp.ServerIdentifier:       {4, "Server Identifier"},
+		dhcp.RenewalTimeValue:       {4, "Renewal Time Value"},
+		dhcp.RebindingTimeValue:     {4, "Rebinding Time Value"},
+		dhcp.VendorSpecific:         {-1, "Vendor Specific"},
+		dhcp.PerformRouterDiscovery: {1, "Perform Router Discovery"},
+		dhcp.NetBIOSNameServer:      {-1, "NetBIOS Name Server"},
+		dhcp.NetBIOSNodeType:        {1, "NetBIOS Node Type"},
+		dhcp.NetBIOSScope:           {-1, "NetBIOS Scope"},
+		dhcp.RequestedIPAddress:     {-1, "Requested IP Address"},
+		dhcp.VendorClassIdentifier:  {-1, "Vendor Class Identifier"},
+		dhcp.MaxDHCPMessageSize:     {2, "Max DHCP Message Size"},
+		dhcp.ParameterRequestList:   {-1, "Parameter Request List"},
+		dhcp.ClientIdentifier:       {-1, "Client Identifier"},
+		dhcp.DomainSearch:           {-1, "Domain Search"},
+		dhcp.UserClass:              {-1, "User Class"},
+		dhcp.ClientFQDN:             {-1, "Client FQDN"},
+		dhcp.WebProxyServer:         {-1, "Web Proxy Server"},
 	}
 
 	messageType = map[byte]string{
@@ -165,17 +168,29 @@ loop:
 			// Single IP address
 			fmt.Print(ip4(opts[i:]))
 
+		case dhcp.PerformRouterDiscovery:
+			// yes or no
+			if opts[i] == 0 {
+				fmt.Print("no")
+			} else {
+				fmt.Print("yes")
+			}
+
+		case dhcp.NetBIOSNodeType:
+			// hex byte
+			fmt.Printf("%#02x", opts[i])
+
 		case dhcp.MaxDHCPMessageSize:
 			// 16-bit integer
 			fmt.Print(b16(opts[i:]))
 
 		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue, dhcp.RebindingTimeValue:
-			// Duration 
+			// Duration
 			if d := b32(opts[i:]); true {
-				fmt.Printf("%d (%s)", d, time.Duration(time.Duration(d) * time.Second).String())
+				fmt.Printf("%d (%s)", d, time.Duration(time.Duration(d)*time.Second).String())
 			}
 
-		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer:
+		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer, dhcp.NetBIOSScope:
 			// String
 			fmt.Printf("%q", string(opts[i:i+length]))
 
@@ -198,20 +213,20 @@ loop:
 			// Dump data
 			fmt.Printf("%q", opts[i:i+length])
 
-/*
-			// Multi-dump
-			for j := i; ; {
-				l := int(opts[j])
-				if j > i {
-					fmt.Printf("\n%24s   ", "")
+			/*
+				// Multi-dump
+				for j := i; ; {
+					l := int(opts[j])
+					if j > i {
+						fmt.Printf("\n%24s   ", "")
+					}
+					fmt.Printf("%q", string(opts[j+1:j+l+1]))
+					j += l + 1
+					if j >= length {
+						break
+					}
 				}
-				fmt.Printf("%q", string(opts[j+1:j+l+1]))
-				j += l + 1
-				if j >= length {
-					break
-				}
-			}
-*/
+			*/
 
 		case dhcp.ParameterRequestList:
 			// Parameter list
