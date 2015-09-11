@@ -91,6 +91,9 @@ const (
 	VendorClassIdentifier = 60
 	ClientIdentifier      = 61
 
+	// RFC 4702
+	ClientFQDN = 81
+
 	// RFC 3397
 	DomainSearch = 119
 

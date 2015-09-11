@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"strconv"
 
 	"./dhcp"
 	"github.com/cmatsuoka/dncomp"
@@ -41,6 +40,7 @@ func init() {
 		dhcp.ParameterRequestList:  {-1, "Parameter Request List"},
 		dhcp.ClientIdentifier:      {-1, "Client Identifier"},
 		dhcp.DomainSearch:          {-1, "Domain Search"},
+		dhcp.ClientFQDN:            {-1, "Client FQDN"},
 		dhcp.WebProxyServer:        {-1, "Web Proxy Server"},
 	}
 
@@ -56,33 +56,27 @@ func init() {
 	}
 }
 
-func macAddress(b []byte) string {
+func wireString(b []byte) string {
 	var buf bytes.Buffer
-	for i := range b {
-		if i > 0 {
-			buf.WriteString(":")
+	i := 0
+	for {
+		length := int(b[i])
+		if length == 0 {
+			break
 		}
-		buf.WriteString(fmt.Sprintf("%02x", b[i]))
-	}
+		length += i
+		if length > len(b) {
+			break
+		}
+		buf.Write(b[i:length])
+		buf.WriteString(".")
 
+		i += 1 + length
+		if i >= len(b) {
+			break
+		}
+	}
 	return buf.String()
-}
-
-func printData(b []byte) {
-	str := true
-	for _, c := range b {
-		if !strconv.IsPrint(rune(c)) {
-			str = false
-		}
-	}
-
-	if str {
-		fmt.Printf("\"%s\"", string(b))
-	} else {
-		for _, c := range b {
-			fmt.Printf("%02x ", c)
-		}
-	}
 }
 
 func showOptions(p *dhcp.Packet) {
@@ -104,6 +98,18 @@ func showOptions(p *dhcp.Packet) {
 		var ip dhcp.IPv4Address
 		copy(ip[:], data[0:4])
 		return ip.String()
+	}
+
+	mac6 := func(b []byte) string {
+		var buf bytes.Buffer
+		for i := range b {
+			if i > 0 {
+				buf.WriteString(":")
+			}
+			buf.WriteString(fmt.Sprintf("%02x", b[i]))
+		}
+
+		return buf.String()
 	}
 
 	opts := p.Options
@@ -163,7 +169,7 @@ loop:
 
 		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer:
 			// String
-			fmt.Print(string(opts[i : i+length]))
+			fmt.Printf("%q", string(opts[i:i+length]))
 
 		case dhcp.DomainSearch:
 			// Compressed domain names (RFC 1035)
@@ -175,14 +181,14 @@ loop:
 			// Types according to RFC 1700
 			switch opts[i] {
 			case 1:
-				fmt.Print(macAddress(opts[i+1 : i+7]))
+				fmt.Print(mac6(opts[i+1 : i+7]))
 			default:
 				fmt.Printf("type %d (len %d)", opts[i], length-1)
 			}
 
 		case dhcp.VendorSpecific, dhcp.VendorClassIdentifier:
 			// Dump data
-			printData(opts[i : i+length])
+			fmt.Printf("%q", opts[i:i+length])
 
 		case dhcp.ParameterRequestList:
 			// Parameter list
@@ -191,6 +197,23 @@ loop:
 					fmt.Printf("\n%24s   ", "")
 				}
 				fmt.Printf("%02x %s", p, options[p].Name)
+			}
+
+		case dhcp.ClientFQDN:
+			// Client FQDN format
+			c := []byte{'-', '-', '-', '-'}
+			d := []byte{'N', 'E', 'O', 'S'}
+			for j := range c {
+				if opts[j]&(1<<(3-uint(j))) != 0 {
+					c[j] = d[j]
+				}
+			}
+			fmt.Printf("%s %02x %02x ", string(c), opts[i+1],
+				opts[i+2])
+			if opts[i]&0x04 == 0 {
+				fmt.Printf("%q", string(opts[i+3:]))
+			} else {
+				fmt.Printf("%q", wireString(opts[i+3:]))
 			}
 		}
 		fmt.Println()

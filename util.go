@@ -46,3 +46,4 @@ func getVendor(mac string) string {
 	return v
 
 }
+
