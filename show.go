@@ -35,6 +35,7 @@ func init() {
 		dhcp.VendorSpecific:     {-1, "Vendor Specific"},
 		dhcp.NetBIOSNameServer:  {-1, "NetBIOS Name Server"},
 		dhcp.RequestedIPAddress: {-1, "Requested IP Address"},
+		dhcp.ParameterRequestList: {-1, "Parameter Request List"},
 		dhcp.ClientIdentifier:   {-1, "Client Identifier"},
 		dhcp.DomainSearch:       {-1, "Domain Search"},
 		dhcp.WebProxyServer:     {-1, "Web Proxy Server"},
@@ -151,6 +152,16 @@ loop:
 			// Dump data
 			fmt.Println(opts[i:i+length])
 
+
+		case dhcp.ParameterRequestList:
+			// Parameter list
+			for i,p := range(opts[i:i+length]) {
+				if i > 0 {
+					fmt.Printf("\n%24s   ", "")
+				}
+				fmt.Printf("%02x %s", p, options[p].Name)
+			}
+			fmt.Println()
 		}
 		fmt.Println()
 
