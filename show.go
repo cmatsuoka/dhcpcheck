@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"./dhcp"
 	"github.com/cmatsuoka/dncomp"
@@ -145,7 +146,11 @@ loop:
 
 		switch o {
 		case dhcp.DHCPMessageType:
-			fmt.Printf("%02x %s", opts[i], messageType[opts[i]])
+			if m := messageType[opts[i]]; m != "" {
+				fmt.Printf("%s", messageType[opts[i]])
+			} else {
+				fmt.Printf("<unknown: %d>", opts[i])
+			}
 
 		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
 			// Multiple IP addresses
@@ -165,8 +170,10 @@ loop:
 			fmt.Print(b16(opts[i:]))
 
 		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue, dhcp.RebindingTimeValue:
-			// 32-bit integer
-			fmt.Print(b32(opts[i:]))
+			// Duration 
+			if d := b32(opts[i:]); true {
+				fmt.Printf("%d (%s)", d, time.Duration(d).String())
+			}
 
 		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer:
 			// String
@@ -187,20 +194,24 @@ loop:
 				fmt.Printf("type %d (len %d)", opts[i], length-1)
 			}
 
-		case dhcp.VendorSpecific, dhcp.VendorClassIdentifier:
+		case dhcp.VendorSpecific, dhcp.VendorClassIdentifier, dhcp.UserClass:
 			// Dump data
 			fmt.Printf("%q", opts[i:i+length])
 
-		case dhcp.UserClass:
+/*
 			// Multi-dump
 			for j := i; ; {
-				l := int(opts[i])
+				l := int(opts[j])
 				if j > i {
 					fmt.Printf("\n%24s   ", "")
 				}
-				fmt.Printf("%q", string(opts[j:j+l]))
+				fmt.Printf("%q", string(opts[j+1:j+l+1]))
 				j += l + 1
+				if j >= length {
+					break
+				}
 			}
+*/
 
 		case dhcp.ParameterRequestList:
 			// Parameter list
@@ -208,7 +219,7 @@ loop:
 				if i > 0 {
 					fmt.Printf("\n%24s   ", "")
 				}
-				fmt.Printf("%02x %s", p, options[p].Name)
+				fmt.Printf("%3d %s", p, options[p].Name)
 			}
 
 		case dhcp.ClientFQDN:
@@ -223,9 +234,9 @@ loop:
 			fmt.Printf("%s %02x %02x ", string(c), opts[i+1],
 				opts[i+2])
 			if opts[i]&0x04 == 0 {
-				fmt.Printf("%q", string(opts[i+3:]))
+				fmt.Printf("%q", string(opts[i+3:i+length]))
 			} else {
-				fmt.Printf("%q", wireString(opts[i+3:]))
+				fmt.Printf("%q", wireString(opts[i+3:i+length]))
 			}
 		}
 		fmt.Println()
