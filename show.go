@@ -37,6 +37,7 @@ func init() {
 		dhcp.NetBIOSNameServer:     {-1, "NetBIOS Name Server"},
 		dhcp.RequestedIPAddress:    {-1, "Requested IP Address"},
 		dhcp.VendorClassIdentifier: {-1, "Vendor Class Identifier"},
+		dhcp.MaxDHCPMessageSize:    {2, "Max DHCP Message Size"},
 		dhcp.ParameterRequestList:  {-1, "Parameter Request List"},
 		dhcp.ClientIdentifier:      {-1, "Client Identifier"},
 		dhcp.DomainSearch:          {-1, "Domain Search"},
@@ -85,6 +86,13 @@ func printData(b []byte) {
 }
 
 func showOptions(p *dhcp.Packet) {
+	b16 := func(data []byte) uint16 {
+		buf := bytes.NewBuffer(data)
+		var x uint16
+		binary.Read(buf, binary.BigEndian, &x)
+		return x
+	}
+
 	b32 := func(data []byte) uint32 {
 		buf := bytes.NewBuffer(data)
 		var x uint32
@@ -144,6 +152,10 @@ loop:
 		case dhcp.ServerIdentifier, dhcp.SubnetMask, dhcp.BroadcastAddress, dhcp.RequestedIPAddress:
 			// Single IP address
 			fmt.Print(ip4(opts[i:]))
+
+		case dhcp.MaxDHCPMessageSize:
+			// 16-bit integer
+			fmt.Print(b16(opts[i:]))
 
 		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue, dhcp.RebindingTimeValue:
 			// 32-bit integer

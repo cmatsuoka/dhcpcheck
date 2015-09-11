@@ -76,20 +76,20 @@ const (
 	STDAServer            = 76
 
 	// DHCP Extensions
-	RequestedIPAddress     = 50
-	IPAddressLeaseTime     = 51
-	OptionOverload         = 52
-	TFTPServerName         = 66
-	BootfileName           = 67
-	DHCPMessageType        = 53
-	ServerIdentifier       = 54
-	ParameterRequestList   = 55
-	Message                = 56
-	MaximumDHCPMessageSize = 57
-	RenewalTimeValue       = 58
-	RebindingTimeValue     = 59
-	VendorClassIdentifier  = 60
-	ClientIdentifier       = 61
+	RequestedIPAddress    = 50
+	IPAddressLeaseTime    = 51
+	OptionOverload        = 52
+	TFTPServerName        = 66
+	BootfileName          = 67
+	DHCPMessageType       = 53
+	ServerIdentifier      = 54
+	ParameterRequestList  = 55
+	Message               = 56
+	MaxDHCPMessageSize    = 57
+	RenewalTimeValue      = 58
+	RebindingTimeValue    = 59
+	VendorClassIdentifier = 60
+	ClientIdentifier      = 61
 
 	// RFC 3397
 	DomainSearch = 119
