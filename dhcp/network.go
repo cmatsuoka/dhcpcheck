@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type Peer interface {
+	Send(*Packet) error
+	Receive(time.Duration) (Packet, *net.UDPAddr, error)
+	Broadcast(*Packet) error
+}
+
 // Peer definitions
 
 type peer struct {
