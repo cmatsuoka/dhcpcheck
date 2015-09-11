@@ -187,7 +187,7 @@ loop:
 		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue, dhcp.RebindingTimeValue:
 			// Duration
 			if d := b32(opts[i:]); true {
-				fmt.Printf("%d (%s)", d, time.Duration(time.Duration(d)*time.Second).String())
+				fmt.Printf("%d (%s)", d, formatDuration(time.Duration(d)*time.Second))
 			}
 
 		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer, dhcp.NetBIOSScope:
