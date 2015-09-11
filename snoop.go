@@ -63,8 +63,12 @@ func snoop(iface string) {
 		ip := msg.origin
 		p := msg.packet
 		mac := getMACFromIP(ip)
-		fmt.Printf("\n<<< Receive packet from %s (%s)\n", ip, getName(ip))
-		fmt.Printf("    MAC address: %s (%s)\n", mac, getVendor(mac))
+		if ip == "0.0.0.0" {
+			fmt.Printf("\n<<< Broadcast packet\n")
+		} else {
+			fmt.Printf("\n<<< Packet from %s (%s)\n", ip, getName(ip))
+			fmt.Printf("    MAC address: %s (%s)\n", mac, getVendor(mac))
+		}
 		showPacket(&p)
 	}
 }
