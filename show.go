@@ -1,11 +1,12 @@
 package main
 
 import (
-	"./dhcp"
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"strconv"
 
+	"./dhcp"
 	"github.com/cmatsuoka/dncomp"
 )
 
@@ -19,26 +20,27 @@ var messageType map[byte]string
 
 func init() {
 	options = map[byte]option{
-		dhcp.PadOption:          {0, "Pad Option"},
-		dhcp.Router:             {-1, "Router"},
-		dhcp.SubnetMask:         {4, "Subnet Mask"},
-		dhcp.DomainNameServer:   {-1, "Domain Name Server"},
-		dhcp.HostName:           {-1, "Host Name"},
-		dhcp.DomainName:         {-1, "Domain Name"},
-		dhcp.BroadcastAddress:   {4, "Broadcast Address"},
-		dhcp.StaticRoute:        {-1, "Static Route"},
-		dhcp.IPAddressLeaseTime: {4, "IP Address Lease Time"},
-		dhcp.DHCPMessageType:    {1, "DHCP Message Type"},
-		dhcp.ServerIdentifier:   {4, "Server Identifier"},
-		dhcp.RenewalTimeValue:   {4, "Renewal Time Value"},
-		dhcp.RebindingTimeValue: {4, "Rebinding Time Value"},
-		dhcp.VendorSpecific:     {-1, "Vendor Specific"},
-		dhcp.NetBIOSNameServer:  {-1, "NetBIOS Name Server"},
-		dhcp.RequestedIPAddress: {-1, "Requested IP Address"},
-		dhcp.ParameterRequestList: {-1, "Parameter Request List"},
-		dhcp.ClientIdentifier:   {-1, "Client Identifier"},
-		dhcp.DomainSearch:       {-1, "Domain Search"},
-		dhcp.WebProxyServer:     {-1, "Web Proxy Server"},
+		dhcp.PadOption:             {0, "Pad Option"},
+		dhcp.Router:                {-1, "Router"},
+		dhcp.SubnetMask:            {4, "Subnet Mask"},
+		dhcp.DomainNameServer:      {-1, "Domain Name Server"},
+		dhcp.HostName:              {-1, "Host Name"},
+		dhcp.DomainName:            {-1, "Domain Name"},
+		dhcp.BroadcastAddress:      {4, "Broadcast Address"},
+		dhcp.StaticRoute:           {-1, "Static Route"},
+		dhcp.IPAddressLeaseTime:    {4, "IP Address Lease Time"},
+		dhcp.DHCPMessageType:       {1, "DHCP Message Type"},
+		dhcp.ServerIdentifier:      {4, "Server Identifier"},
+		dhcp.RenewalTimeValue:      {4, "Renewal Time Value"},
+		dhcp.RebindingTimeValue:    {4, "Rebinding Time Value"},
+		dhcp.VendorSpecific:        {-1, "Vendor Specific"},
+		dhcp.NetBIOSNameServer:     {-1, "NetBIOS Name Server"},
+		dhcp.RequestedIPAddress:    {-1, "Requested IP Address"},
+		dhcp.VendorClassIdentifier: {-1, "Vendor Class Identifier"},
+		dhcp.ParameterRequestList:  {-1, "Parameter Request List"},
+		dhcp.ClientIdentifier:      {-1, "Client Identifier"},
+		dhcp.DomainSearch:          {-1, "Domain Search"},
+		dhcp.WebProxyServer:        {-1, "Web Proxy Server"},
 	}
 
 	messageType = map[byte]string{
@@ -54,7 +56,7 @@ func init() {
 
 func macAddress(b []byte) string {
 	var buf bytes.Buffer
-	for i := range(b) {
+	for i := range b {
 		if i > 0 {
 			buf.WriteString(":")
 		}
@@ -62,6 +64,24 @@ func macAddress(b []byte) string {
 	}
 
 	return buf.String()
+}
+
+func printData(b []byte) {
+	str := true
+	for _, c := range b {
+		if !strconv.IsPrint(rune(c)) {
+			str = false
+		}
+	}
+
+	if str {
+		fmt.Printf("\"%s\"", string(b))
+	} else {
+		for _, c := range b {
+			fmt.Printf("%02x ", c)
+		}
+		fmt.Println()
+	}
 }
 
 func showOptions(p *dhcp.Packet) {
@@ -143,19 +163,18 @@ loop:
 			// Types according to RFC 1700
 			switch opts[i] {
 			case 1:
-				fmt.Println(macAddress(opts[i+1:i+7]))
+				fmt.Println(macAddress(opts[i+1 : i+7]))
 			default:
-				fmt.Printf("type %d (len %d)\n", opts[i], length - 1)
+				fmt.Printf("type %d (len %d)\n", opts[i], length-1)
 			}
 
-		case dhcp.VendorSpecific:
+		case dhcp.VendorSpecific, dhcp.VendorClassIdentifier:
 			// Dump data
-			fmt.Println(opts[i:i+length])
-
+			printData(opts[i : i+length])
 
 		case dhcp.ParameterRequestList:
 			// Parameter list
-			for i,p := range(opts[i:i+length]) {
+			for i, p := range opts[i : i+length] {
 				if i > 0 {
 					fmt.Printf("\n%24s   ", "")
 				}
