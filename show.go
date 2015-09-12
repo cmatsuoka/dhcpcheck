@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
-	"time"
 
 	"./dhcp"
+	"./format"
 	"github.com/cmatsuoka/dncomp"
 )
 
@@ -34,6 +32,7 @@ func init() {
 		dhcp.IPAddressLeaseTime:     {4, "IP Address Lease Time"},
 		dhcp.DHCPMessageType:        {1, "DHCP Message Type"},
 		dhcp.ServerIdentifier:       {4, "Server Identifier"},
+		dhcp.InterfaceMTU:           {2, "Server MTU"},
 		dhcp.RenewalTimeValue:       {4, "Renewal Time Value"},
 		dhcp.RebindingTimeValue:     {4, "Rebinding Time Value"},
 		dhcp.VendorSpecific:         {-1, "Vendor Specific"},
@@ -69,62 +68,7 @@ func init() {
 	}
 }
 
-func wireString(b []byte) string {
-	var buf bytes.Buffer
-	i := 0
-	for {
-		length := int(b[i])
-		if length == 0 {
-			break
-		}
-		length += i
-		if length > len(b) {
-			break
-		}
-		buf.Write(b[i:length])
-		buf.WriteString(".")
-
-		i += 1 + length
-		if i >= len(b) {
-			break
-		}
-	}
-	return buf.String()
-}
-
 func showOptions(p *dhcp.Packet) {
-	b16 := func(data []byte) uint16 {
-		buf := bytes.NewBuffer(data)
-		var x uint16
-		binary.Read(buf, binary.BigEndian, &x)
-		return x
-	}
-
-	b32 := func(data []byte) uint32 {
-		buf := bytes.NewBuffer(data)
-		var x uint32
-		binary.Read(buf, binary.BigEndian, &x)
-		return x
-	}
-
-	ip4 := func(data []byte) string {
-		var ip dhcp.IPv4Address
-		copy(ip[:], data[0:4])
-		return ip.String()
-	}
-
-	mac6 := func(b []byte) string {
-		var buf bytes.Buffer
-		for i := range b {
-			if i > 0 {
-				buf.WriteString(":")
-			}
-			buf.WriteString(fmt.Sprintf("%02x", b[i]))
-		}
-
-		return buf.String()
-	}
-
 	opts := p.Options
 	fmt.Println("Options:")
 loop:
@@ -169,38 +113,36 @@ loop:
 				if n > 0 {
 					fmt.Print(", ")
 				}
-				fmt.Print(ip4(opts[i+n : i+4+n]))
+				fmt.Print(format.IPv4String(opts[i+n : i+4+n]))
 			}
 
-		case dhcp.ServerIdentifier, dhcp.SubnetMask, dhcp.BroadcastAddress, dhcp.RequestedIPAddress:
+		case dhcp.ServerIdentifier, dhcp.SubnetMask,
+			dhcp.BroadcastAddress, dhcp.RequestedIPAddress:
 			// Single IP address
-			fmt.Print(ip4(opts[i:]))
+			fmt.Print(format.IPv4String(opts[i:]))
 
 		case dhcp.PerformRouterDiscovery:
 			// yes or no
-			if opts[i] == 0 {
-				fmt.Print("no")
-			} else {
-				fmt.Print("yes")
-			}
+			fmt.Print(format.YesNo(opts[i:]))
 
 		case dhcp.NetBIOSNodeType:
 			// hex byte
 			fmt.Printf("%#02x", opts[i])
 
-		case dhcp.MaxDHCPMessageSize:
+		case dhcp.MaxDHCPMessageSize, dhcp.InterfaceMTU:
 			// 16-bit integer
-			fmt.Print(b16(opts[i:]))
+			fmt.Print(format.Uint16B(opts[i:]))
 
-		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue, dhcp.RebindingTimeValue:
+		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue,
+			dhcp.RebindingTimeValue:
 			// Duration
-			if d := b32(opts[i:]); true {
-				fmt.Printf("%d (%s)", d, formatDuration(time.Duration(d)*time.Second))
-			}
+			fmt.Printf("%d (%s)", format.Uint32B(opts[i:]),
+				format.DurationString(opts[i:]))
 
-		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer, dhcp.NetBIOSScope:
+		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer,
+			dhcp.NetBIOSScope:
 			// String
-			fmt.Printf("%q", string(opts[i:i+length]))
+			fmt.Printf(format.String(opts[i : i+length]))
 
 		case dhcp.DomainSearch:
 			// Compressed domain names (RFC 1035)
@@ -212,14 +154,14 @@ loop:
 			// Types according to RFC 1700
 			switch opts[i] {
 			case 1:
-				fmt.Print(mac6(opts[i+1 : i+7]))
+				fmt.Print(format.MACAddressString(opts[i+1 : i+7]))
 			default:
 				fmt.Printf("type %d (len %d)", opts[i], length-1)
 			}
 
 		case dhcp.VendorSpecific, dhcp.VendorClassIdentifier, dhcp.UserClass:
 			// Dump data
-			fmt.Printf("%q", opts[i:i+length])
+			fmt.Printf(format.String(opts[i : i+length]))
 
 			/*
 				// Multi-dump
@@ -259,7 +201,7 @@ loop:
 			if opts[i]&0x04 == 0 {
 				fmt.Printf("%q", string(opts[i+3:i+length]))
 			} else {
-				fmt.Printf("%q", wireString(opts[i+3:i+length]))
+				fmt.Printf("%q", format.CanonicalWire(opts[i+3:i+length]))
 			}
 		}
 		fmt.Println()

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net"
-	"time"
 
 	"github.com/cmatsuoka/ouidb"
 	"github.com/mostlygeek/arp"
@@ -46,12 +45,4 @@ func getVendor(mac string) string {
 	v, _ := db.Lookup(mac)
 	return v
 
-}
-
-func formatDuration(t time.Duration) string {
-	s := int(t.Seconds()) % 60
-	m := int(t.Minutes()) % 60
-	h := int(t.Hours()) % 24
-	d := int(t.Hours()) / 24
-	return fmt.Sprintf("%dd%dh%dm%ds", d, h, m, s)
 }
