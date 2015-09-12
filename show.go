@@ -69,14 +69,17 @@ func init() {
 }
 
 func showOptions(p *dhcp.Packet) {
-	opts := p.Options
+
+	opts, err := p.DecodeOptions()
+	if err != nil {
+		fmt.Println("Warning: corrupt option data")
+	}
+
 	fmt.Println("Options:")
 loop:
-	for i := 0; i < len(opts); {
-		o := opts[i]
-		i++
+	for _, o := range opts {
 
-		switch o {
+		switch o.Type {
 		case dhcp.EndOption:
 			fmt.Print("End Option")
 			break loop
@@ -84,103 +87,79 @@ loop:
 			continue
 		}
 
-		length := int(opts[i])
-		i++
-		_, ok := options[o]
-		if ok && options[o].Len >= 0 && options[o].Len != length {
-			fmt.Printf("corrupted option (%d,%d)\n",
-				options[o].Len, length)
-			break loop
-		}
-
-		if name := options[o].Name; name != "" {
-			fmt.Printf("%24s : ", options[o].Name)
+		if name := options[o.Type].Name; name != "" {
+			fmt.Printf("%24s : ", name)
 		} else {
 			fmt.Printf("%24d : ", o)
 		}
 
-		switch o {
+		switch o.Type {
 		case dhcp.DHCPMessageType:
-			if m := messageType[opts[i]]; m != "" {
-				fmt.Printf("%s", messageType[opts[i]])
+			if m, ok := messageType[o.Data[0]]; ok {
+				fmt.Printf(m)
 			} else {
-				fmt.Printf("<unknown: %d>", opts[i])
+				fmt.Printf("<unknown: %d>", o.Data[0])
 			}
 
 		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
 			// Multiple IP addresses
-			for n := 0; n < length; n += 4 {
+			for n := 0; n < len(o.Data); n += 4 {
 				if n > 0 {
 					fmt.Print(", ")
 				}
-				fmt.Print(format.IPv4String(opts[i+n : i+4+n]))
+				fmt.Print(format.IPv4String(o.Data[n : n+4]))
 			}
 
 		case dhcp.ServerIdentifier, dhcp.SubnetMask,
 			dhcp.BroadcastAddress, dhcp.RequestedIPAddress:
 			// Single IP address
-			fmt.Print(format.IPv4String(opts[i:]))
+			fmt.Print(format.IPv4String(o.Data))
 
 		case dhcp.PerformRouterDiscovery:
 			// yes or no
-			fmt.Print(format.YesNo(opts[i:]))
+			fmt.Print(format.YesNo(o.Data))
 
 		case dhcp.NetBIOSNodeType:
 			// hex byte
-			fmt.Printf("%#02x", opts[i])
+			fmt.Printf("%#02x", o.Data[0])
 
 		case dhcp.MaxDHCPMessageSize, dhcp.InterfaceMTU:
 			// 16-bit integer
-			fmt.Print(format.Uint16B(opts[i:]))
+			fmt.Print(format.Uint16B(o.Data))
 
 		case dhcp.IPAddressLeaseTime, dhcp.RenewalTimeValue,
 			dhcp.RebindingTimeValue:
 			// Duration
-			fmt.Printf("%d (%s)", format.Uint32B(opts[i:]),
-				format.DurationString(opts[i:]))
+			fmt.Printf("%d (%s)", format.Uint32B(o.Data),
+				format.DurationString(o.Data))
 
 		case dhcp.HostName, dhcp.DomainName, dhcp.WebProxyServer,
 			dhcp.NetBIOSScope:
 			// String
-			fmt.Printf(format.String(opts[i : i+length]))
+			fmt.Printf(format.String(o.Data))
 
 		case dhcp.DomainSearch:
 			// Compressed domain names (RFC 1035)
-			if s, err := dncomp.Decode(opts[i : i+length]); err != nil {
+			if s, err := dncomp.Decode(o.Data); err != nil {
 				fmt.Print(s)
 			}
 
 		case dhcp.ClientIdentifier:
 			// Types according to RFC 1700
-			switch opts[i] {
+			switch o.Data[0] {
 			case 1:
-				fmt.Print(format.MACAddressString(opts[i+1 : i+7]))
+				fmt.Print(format.MACAddressString(o.Data[1:7]))
 			default:
-				fmt.Printf("type %d (len %d)", opts[i], length-1)
+				fmt.Printf("type %d (len %d)", o.Data[0], len(o.Data)-1)
 			}
 
 		case dhcp.VendorSpecific, dhcp.VendorClassIdentifier, dhcp.UserClass:
 			// Dump data
-			fmt.Printf(format.String(opts[i : i+length]))
-
-			/*
-				// Multi-dump
-				for j := i; ; {
-					l := int(opts[j])
-					if j > i {
-						fmt.Printf("\n%24s   ", "")
-					}
-					fmt.Printf("%q", string(opts[j+1:j+l+1]))
-					j += l + 1
-					if j >= length {
-						break
-					}
-				}
-			*/
+			fmt.Printf(format.String(o.Data))
 
 		case dhcp.ParameterRequestList:
 			// Parameter list
-			for i, p := range opts[i : i+length] {
+			for i, p := range o.Data {
 				if i > 0 {
 					fmt.Printf("\n%24s   ", "")
 				}
@@ -192,21 +171,19 @@ loop:
 			c := []byte{'-', '-', '-', '-'}
 			d := []byte{'N', 'E', 'O', 'S'}
 			for j := range c {
-				if opts[j]&(1<<(3-uint(j))) != 0 {
+				if o.Data[0]&(1<<(3-uint(j))) != 0 {
 					c[j] = d[j]
 				}
 			}
-			fmt.Printf("%s %02x %02x ", string(c), opts[i+1],
-				opts[i+2])
-			if opts[i]&0x04 == 0 {
-				fmt.Printf("%q", string(opts[i+3:i+length]))
+			fmt.Printf("%s %02x %02x ", string(c), o.Data[1],
+				o.Data[2])
+			if o.Data[0]&0x04 == 0 {
+				fmt.Printf("%q", string(o.Data[3:]))
 			} else {
-				fmt.Printf("%q", format.CanonicalWire(opts[i+3:i+length]))
+				fmt.Printf("%q", format.CanonicalWire(o.Data[3:]))
 			}
 		}
 		fmt.Println()
-
-		i += length
 	}
 }
 

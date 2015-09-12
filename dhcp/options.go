@@ -1,5 +1,9 @@
 package dhcp
 
+import (
+	"errors"
+)
+
 const (
 	// RFC 1497 Vendor Extensions
 	PadOption              = 0
@@ -103,3 +107,10 @@ const (
 	// Web Proxy Auto-Discovery Protocol (ietf-wrec-wpad-01)
 	WebProxyServer = 252
 )
+
+var ErrCorruptedOptions = errors.New("dhcp: corrupted options data")
+
+type Option struct {
+	Type byte
+	Data []byte
+}

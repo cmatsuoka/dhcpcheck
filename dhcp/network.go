@@ -160,7 +160,7 @@ func send(conn net.Conn, p *Packet) error {
 
 func receive(conn *net.UDPConn, timeout time.Duration) (Packet, *net.UDPAddr, error) {
 	var p Packet
-	b := make([]byte, 1024)
+	b := make([]byte, 1500)
 	if timeout > 0 {
 		conn.SetReadDeadline(time.Now().Add(timeout))
 	}

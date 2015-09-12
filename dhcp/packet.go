@@ -60,7 +60,7 @@ func (a *HWAddress) MACAddress() *MACAddress {
 	return &mac
 }
 
-type OptionsArea [308]byte
+type OptionsArea [1200]byte
 
 type Packet struct {
 	Op      byte
@@ -117,4 +117,33 @@ func NewDiscoverPacket() *Packet {
 	}
 
 	return p
+}
+
+func (p *Packet) DecodeOptions() ([]Option, error) {
+
+	var option []Option
+
+	for i := 0; i < len(p.Options); {
+
+		if i+1 >= len(p.Options) {
+			return option, ErrCorruptedOptions
+		}
+
+		o := p.Options[i]
+		l := int(p.Options[i+1])
+
+		if i+2+l > len(p.Options) {
+			return option, ErrCorruptedOptions
+		}
+
+		var opt Option
+		opt.Type = o
+		opt.Data = p.Options[i+2 : i+2+l]
+
+		option = append(option, opt)
+
+		i += 2 + l
+	}
+
+	return option, nil
 }
