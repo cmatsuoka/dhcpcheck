@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func CanonicalWire(b []byte) string {
+func CanonicalWireFormat(b []byte) string {
 	var buf bytes.Buffer
 	i := 0
 	for {
@@ -15,16 +15,20 @@ func CanonicalWire(b []byte) string {
 		if length == 0 {
 			break
 		}
-		length += i
-		if length > len(b) {
+		i++
+
+		if i+length > len(b) {
 			break
 		}
-		buf.Write(b[i:length])
-		buf.WriteString(".")
+		buf.Write(b[i : i+length])
 
-		i += 1 + length
+		i += length
 		if i >= len(b) {
 			break
+		}
+
+		if b[i] != 0 {
+			buf.WriteString(".")
 		}
 	}
 	return buf.String()

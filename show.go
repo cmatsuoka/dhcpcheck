@@ -180,7 +180,7 @@ loop:
 			if o.Data[0]&0x04 == 0 {
 				fmt.Printf("%q", string(o.Data[3:]))
 			} else {
-				fmt.Printf("%q", format.CanonicalWire(o.Data[3:]))
+				fmt.Printf("%q", format.CanonicalWireFormat(o.Data[3:]))
 			}
 		}
 		fmt.Println()
