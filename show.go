@@ -15,8 +15,11 @@ type option struct {
 	Name string
 }
 
-var options map[byte]option
-var messageType map[byte]string
+var (
+	options     map[byte]option
+	messageType map[byte]string
+	op          map[byte]string
+)
 
 func init() {
 	options = map[byte]option{
@@ -58,6 +61,11 @@ func init() {
 		dhcp.DHCPNack:     "DHCPNACK",
 		dhcp.DHCPRelease:  "DHCPRELEASE",
 		dhcp.DHCPInform:   "DHCPINFORM",
+	}
+
+	op = map[byte]string{
+		dhcp.BootRequest: "BOOTREQUEST",
+		dhcp.BootReply:   "BOOTREPLY",
 	}
 }
 
@@ -260,7 +268,15 @@ loop:
 	}
 }
 
+func opcode(o byte) string {
+	if s := op[o]; s != "" {
+		return s
+	}
+	return fmt.Sprintf("<unknown:%d>", o)
+}
+
 func showPacket(p *dhcp.Packet) {
+	fmt.Printf("Message opcode    : %s\n", opcode(p.Op))
 	fmt.Printf("Transaction ID    : %#08x\n", p.Xid)
 	fmt.Printf("Client IP address : %s\n", p.Ciaddr.String())
 	fmt.Printf("Your IP address   : %s\n", p.Yiaddr.String())
