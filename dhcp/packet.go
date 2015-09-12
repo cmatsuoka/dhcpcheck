@@ -125,24 +125,32 @@ func (p *Packet) DecodeOptions() ([]Option, error) {
 
 	for i := 0; i < len(p.Options); {
 
-		if i+1 >= len(p.Options) {
+		if i >= len(p.Options) {
 			return option, ErrCorruptedOptions
 		}
 
 		o := p.Options[i]
-		l := int(p.Options[i+1])
+		i++
 
-		if i+2+l > len(p.Options) {
+		if o == EndOption || o == PadOption {
+			option = append(option, Option{o, nil})
+			continue
+		}
+
+		if i >= len(p.Options) {
 			return option, ErrCorruptedOptions
 		}
 
-		var opt Option
-		opt.Type = o
-		opt.Data = p.Options[i+2 : i+2+l]
+		l := int(p.Options[i])
+		i++
 
-		option = append(option, opt)
+		if i+l > len(p.Options) {
+			return option, ErrCorruptedOptions
+		}
 
-		i += 2 + l
+		option = append(option, Option{o, p.Options[i : i+l]})
+
+		i += l
 	}
 
 	return option, nil
