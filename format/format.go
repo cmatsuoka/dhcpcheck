@@ -52,7 +52,7 @@ func IPv4String(b []byte) string {
 	return fmt.Sprintf("%d.%d.%d.%d", b[0], b[1], b[2], b[3])
 }
 
-func MACAddressString(b []byte) string {
+func MACAddrString(b []byte) string {
 	var buf bytes.Buffer
 	for i := range b {
 		if i > 0 {
@@ -89,7 +89,7 @@ func String(b []byte) string {
 func RFC1700Types(b []byte) string {
 	switch b[0] {
 	case 1:
-		return MACAddressString(b[1:7])
+		return MACAddrString(b[1:7])
 	default:
 		return fmt.Sprintf("type %d (len %d)", b[0], len(b)-1)
 	}

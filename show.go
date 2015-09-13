@@ -148,7 +148,7 @@ loop:
 			// Types according to RFC 1700
 			switch o.Data[0] {
 			case 1:
-				fmt.Print(format.MACAddressString(o.Data[1:7]))
+				fmt.Print(format.MACAddrString(o.Data[1:7]))
 			default:
 				fmt.Printf("type %d (len %d)", o.Data[0], len(o.Data)-1)
 			}

@@ -13,11 +13,6 @@ func cmdSnoop() {
 	flag.StringVar(&iface, "i", "", "network `interface` to use")
 	flag.Parse()
 
-	if iface == "" {
-		usage(os.Args[1])
-		os.Exit(1)
-	}
-
 	snoop(iface)
 }
 
@@ -39,10 +34,13 @@ func listen(c chan message, peer dhcp.Peer) {
 
 func snoop(iface string) {
 
-	mac, err := MACFromIface(iface)
-	checkError(err)
-
-	fmt.Printf("Interface: %s [%s]\n", iface, mac)
+	var mac string
+	if iface != "" {
+		var err error
+		mac, err = MACFromIface(iface)
+		checkError(err)
+		fmt.Printf("Interface: %s [%s]\n", iface, mac)
+	}
 
 	// Set up client
 	client, err := dhcp.NewClient()
@@ -60,14 +58,21 @@ func snoop(iface string) {
 
 	for {
 		msg := <-c
-		ip := msg.origin
 		p := msg.packet
-		mac := MACFromIP(ip)
-		if ip == "0.0.0.0" {
+
+		rip := msg.origin
+		rmac := MACFromIP(rip)
+		pmac := p.Chaddr.MACAddress().String()
+
+		if iface != "" && mac != pmac {
+			continue
+		}
+
+		if rip == "0.0.0.0" {
 			fmt.Printf("\n<<< Broadcast packet\n")
 		} else {
-			fmt.Printf("\n<<< Packet from %s (%s)\n", ip, NameFromIP(ip))
-			fmt.Printf("    MAC address: %s (%s)\n", mac, VendorFromMAC(mac))
+			fmt.Printf("\n<<< Packet from %s (%s)\n", rip, NameFromIP(rip))
+			fmt.Printf("    MAC address: %s (%s)\n", rmac, VendorFromMAC(rmac))
 		}
 		showPacket(&p)
 	}
