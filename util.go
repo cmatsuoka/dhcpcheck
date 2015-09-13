@@ -59,7 +59,16 @@ func MACFromIP(addr string) string {
 	return arp.Search(addr)
 }
 
+var vendorCache = make(map[string]string)
+
 func VendorFromMAC(mac string) string {
+	if v := vendorCache[mac]; v != "" {
+		return v
+	}
 	v, _ := db.Lookup(mac)
+	if v == "" {
+		v = mac[:8]
+	}
+	vendorCache[mac] = v
 	return v
 }

@@ -15,14 +15,15 @@ var (
 )
 
 type Statistics struct {
-	pkrec, pkproc, pksent uint64
-	msg, smac, rmac       map[string]uint64
+	pkrec, pkproc uint64
+	pksent        uint64
+	count         map[string]uint64 // map mac to packet count
+	msg           map[string]uint64 // map msg type to count
 }
 
 func init() {
 	stats = Statistics{}
-	stats.smac = map[string]uint64{}
-	stats.rmac = map[string]uint64{}
+	stats.count = map[string]uint64{}
 	stats.msg = map[string]uint64{}
 
 	cmd = map[string]func(){
@@ -61,25 +62,14 @@ func summary() {
 
 	fmt.Println("\nVendor stats")
 
-	vendor := map[string]bool{}
-
-	vsent := map[string]uint64{}
-	for key, _ := range stats.smac {
+	vcount := map[string]int{}
+	for key, _ := range stats.count {
 		v := VendorFromMAC(key)
-		vsent[v]++
-		vendor[v] = true
+		vcount[v]++
 	}
 
-	vrec := map[string]uint64{}
-	for key, _ := range stats.rmac {
-		v := VendorFromMAC(key)
-		vrec[v]++
-		vendor[v] = true
-	}
-
-	for key, _ := range vendor {
-		fmt.Printf("  %-8.8s : %d out / %d in\n",
-			key, vsent[key], vrec[key])
+	for key, _ := range vcount {
+		fmt.Printf("  %-8.8s : %d\n", key, vcount[key])
 	}
 }
 

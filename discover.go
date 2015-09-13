@@ -61,7 +61,7 @@ func discover(iface string, timeout time.Duration) {
 	checkError(err)
 
 	stats.pksent++
-	stats.smac[mac]++
+	stats.count[mac]++
 
 	if timeout <= 0 {
 		return
@@ -87,13 +87,12 @@ func discover(iface string, timeout time.Duration) {
 		rmac := MACFromIP(rip)
 
 		stats.pkproc++
+		stats.count[rmac]++
 
 		fmt.Printf("\n<<< Receive DHCP offer from %s (%s)\n",
 			rip, NameFromIP(rip))
 		fmt.Printf("    MAC address: %s (%s)\n",
 			rmac, VendorFromMAC(rmac))
-
-		stats.rmac[rmac]++
 
 		showPacket(&o)
 	}

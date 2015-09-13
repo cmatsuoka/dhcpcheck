@@ -77,15 +77,16 @@ func snoop(iface string) {
 		}
 
 		stats.pkproc++
+		stats.count[rmac]++
 
 		if rip == "0.0.0.0" {
 			fmt.Printf("\n<<< Broadcast packet\n")
 		} else {
-			fmt.Printf("\n<<< Packet from %s (%s)\n", rip, NameFromIP(rip))
-			fmt.Printf("    MAC address: %s (%s)\n", rmac, VendorFromMAC(rmac))
+			fmt.Printf("\n<<< Packet from %s (%s)\n",
+				rip, NameFromIP(rip))
+			fmt.Printf("    MAC address: %s (%s)\n",
+				rmac, VendorFromMAC(rmac))
 		}
-
-		stats.rmac[rmac]++
 
 		showPacket(&p)
 	}
