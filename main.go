@@ -64,10 +64,10 @@ func summary() {
 
 	fmt.Println("\nVendors")
 
-	vcount := map[string]int{}
-	for key, _ := range stats.count {
+	vcount := map[string]uint{}
+	for key, val := range stats.count {
 		v := VendorFromMAC(key)
-		vcount[v]++
+		vcount[v] += val
 	}
 
 	for key, val := range vcount {
