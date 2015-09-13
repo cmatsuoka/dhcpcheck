@@ -15,6 +15,8 @@ func cmdSnoop() {
 
 	setupSummary()
 
+	go serve(3344)
+
 	snoop(iface)
 }
 
