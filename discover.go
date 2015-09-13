@@ -2,6 +2,7 @@ package main
 
 import (
 	"./dhcp"
+	"./format"
 	"flag"
 	"fmt"
 	"os"
@@ -70,14 +71,16 @@ func discover(iface string, timeout time.Duration) {
 			break
 		}
 
-		if o.Xid == p.Xid {
-			ip := remote.IP.String()
-			mac := MACFromIP(ip)
+		cmac := format.MACAddressString(o.Chaddr[:6])
+
+		if mac == cmac && o.Xid == p.Xid {
+			rip := remote.IP.String()
+			rmac := MACFromIP(rip)
 
 			fmt.Printf("\n<<< Receive DHCP offer from %s (%s)\n",
-				ip, NameFromIP(ip))
+				rip, NameFromIP(rip))
 			fmt.Printf("    MAC address: %s (%s)\n",
-				mac, VendorFromMAC(mac))
+				rmac, VendorFromMAC(rmac))
 
 			showPacket(&o)
 		}
