@@ -4,23 +4,26 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"sort"
 	"strings"
 )
 
-const (
-	pkrec = iota
-	pkproc
-	pksent
-)
-
 var (
-	stats map[int]uint64
+	stats Statistics
 	cmd   map[string]func()
 )
 
+type Statistics struct {
+	pkrec, pkproc, pksent uint64
+	msg, smac, rmac       map[string]uint64
+}
+
 func init() {
-	stats = map[int]uint64{}
+	stats = Statistics{}
+	stats.smac = map[string]uint64{}
+	stats.rmac = map[string]uint64{}
+	stats.msg = map[string]uint64{}
 
 	cmd = map[string]func(){
 		"discover": cmdDiscover,
@@ -35,11 +38,49 @@ func checkError(err error) {
 	}
 }
 
+func setupSummary() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
+		summary()
+		os.Exit(1)
+	}()
+}
+
 func summary() {
-	fmt.Println("\nSummary:")
-	fmt.Println("Packets sent      : ", stats[pksent])
-	fmt.Println("Packets received  : ", stats[pkrec])
-	fmt.Println("Packets processed : ", stats[pkproc])
+	fmt.Println("\nPacket summary")
+	fmt.Println("  Packets sent      :", stats.pksent)
+	fmt.Println("  Packets received  :", stats.pkrec)
+	fmt.Println("  Packets processed :", stats.pkproc)
+
+	fmt.Println("\nMessage Types")
+	for key, val := range stats.msg {
+		fmt.Printf("  %-12.12s : %d\n", key, val)
+	}
+
+	fmt.Println("\nVendor stats")
+
+	vendor := map[string]bool{}
+
+	vsent := map[string]uint64{}
+	for key, _ := range stats.smac {
+		v := VendorFromMAC(key)
+		vsent[v]++
+		vendor[v] = true
+	}
+
+	vrec := map[string]uint64{}
+	for key, _ := range stats.rmac {
+		v := VendorFromMAC(key)
+		vrec[v]++
+		vendor[v] = true
+	}
+
+	for key, _ := range vendor {
+		fmt.Printf("  %-8.8s : %d out / %d in\n",
+			key, vsent[key], vrec[key])
+	}
 }
 
 func usage(c string) {

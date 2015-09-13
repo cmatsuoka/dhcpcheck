@@ -97,8 +97,11 @@ loop:
 		case dhcp.DHCPMessageType:
 			if m, ok := messageType[o.Data[0]]; ok {
 				fmt.Printf(m)
+				stats.msg[m]++
 			} else {
-				fmt.Printf("<unknown: %d>", o.Data[0])
+				s := fmt.Sprintf("<unknown: %d>", o.Data[0])
+				fmt.Printf(s)
+				stats.msg[s]++
 			}
 
 		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
