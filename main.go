@@ -74,9 +74,11 @@ func summary() {
 		fmt.Printf("  %-8.8s : %d\n", key, val)
 	}
 
-	fmt.Println("\nDHCP vendor classes:")
-	for key, val := range stats.vdc {
-		fmt.Printf("  %-20.20s : %d\n", key, val)
+	if len(stats.vdc) > 0 {
+		fmt.Println("\nVendor classes")
+		for key, val := range stats.vdc {
+			fmt.Printf("  %-20.20s : %d\n", key, val)
+		}
 	}
 }
 

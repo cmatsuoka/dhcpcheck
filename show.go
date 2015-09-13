@@ -203,7 +203,12 @@ func opcode(o byte) string {
 
 func showPacket(p *dhcp.Packet) {
 	fmt.Printf("Message opcode    : %s\n", opcode(p.Op))
+	//fmt.Printf("HW address type   : %d\n", p.Htype)
+	//fmt.Printf("HW address length : %d\n", p.Hlen)
+	//fmt.Printf("Hops              : %d\n", p.Hops)
 	fmt.Printf("Transaction ID    : %#08x\n", p.Xid)
+	//fmt.Printf("Seconds elapsed   : %d\n", p.Secs)
+	fmt.Printf("Flags             : %#04x\n", p.Flags)
 	fmt.Printf("Client IP address : %s\n", p.Ciaddr.String())
 	fmt.Printf("Your IP address   : %s\n", p.Yiaddr.String())
 	fmt.Printf("Server IP address : %s\n", p.Siaddr.String())

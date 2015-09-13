@@ -155,3 +155,31 @@ func (p *Packet) DecodeOptions() ([]Option, error) {
 
 	return option, nil
 }
+
+func (p *Packet) AddOptions(b []byte) {
+	// find EndOption
+	var i int
+	for i = 0; i < len(p.Options); {
+
+		o := p.Options[i]
+
+		if o == EndOption {
+			break
+		}
+
+		i++
+
+		if o == PadOption {
+			continue
+		}
+
+		l := int(p.Options[i])
+		i++
+
+		i += l
+	}
+
+	copy(p.Options[i:i+len(b)], b)
+
+	p.Options[i+len(b)] = EndOption
+}

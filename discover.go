@@ -56,6 +56,10 @@ func discover(iface string, timeout time.Duration) {
 	// Send discover packet
 	p := dhcp.NewDiscoverPacket()
 	p.SetClientMAC(mac)
+	class := "dhcpcheck-" + Version
+	p.AddOptions(append(
+		[]byte{dhcp.VendorClassIdentifier, byte(len(class))},
+		[]byte(class)...))
 
 	fmt.Println("\n>>> Send DHCP discover")
 	showPacket(p)
