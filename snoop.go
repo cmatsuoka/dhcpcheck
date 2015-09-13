@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 )
 
 func cmdSnoop() {
@@ -12,6 +13,14 @@ func cmdSnoop() {
 
 	flag.StringVar(&iface, "i", "", "network `interface` to use")
 	flag.Parse()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
+		summary()
+		os.Exit(1)
+	}()
 
 	snoop(iface)
 }
@@ -58,6 +67,7 @@ func snoop(iface string) {
 
 	for {
 		msg := <-c
+		stats[pkrec]++
 		p := msg.packet
 
 		rip := msg.origin
@@ -72,6 +82,8 @@ func snoop(iface string) {
 		if iface != "" && mac != pmac {
 			continue
 		}
+
+		stats[pkproc]++
 
 		if rip == "0.0.0.0" {
 			fmt.Printf("\n<<< Broadcast packet\n")

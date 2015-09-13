@@ -58,6 +58,8 @@ func discover(iface string, timeout time.Duration) {
 	err = client.Broadcast(p)
 	checkError(err)
 
+	stats[pksent]++
+
 	if timeout <= 0 {
 		return
 	}
@@ -70,6 +72,8 @@ func discover(iface string, timeout time.Duration) {
 			break
 		}
 
+		stats[pkrec]++
+
 		cmac := o.Chaddr.MACAddress().String()
 
 		if mac != cmac || o.Xid != p.Xid {
@@ -78,6 +82,8 @@ func discover(iface string, timeout time.Duration) {
 
 		rip := remote.IP.String()
 		rmac := MACFromIP(rip)
+
+		stats[pkproc]++
 
 		fmt.Printf("\n<<< Receive DHCP offer from %s (%s)\n",
 			rip, NameFromIP(rip))

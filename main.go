@@ -8,9 +8,20 @@ import (
 	"strings"
 )
 
-var cmd map[string]func()
+const (
+	pkrec = iota
+	pkproc
+	pksent
+)
+
+var (
+	stats map[int]uint64
+	cmd   map[string]func()
+)
 
 func init() {
+	stats = map[int]uint64{}
+
 	cmd = map[string]func(){
 		"discover": cmdDiscover,
 		"snoop":    cmdSnoop,
@@ -22,6 +33,13 @@ func checkError(err error) {
 		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		os.Exit(1)
 	}
+}
+
+func summary() {
+	fmt.Println("\nSummary:")
+	fmt.Println("Packets sent      : ", stats[pksent])
+	fmt.Println("Packets received  : ", stats[pkrec])
+	fmt.Println("Packets processed : ", stats[pkproc])
 }
 
 func usage(c string) {
@@ -58,6 +76,7 @@ func main() {
 			os.Args = append(os.Args[:1], os.Args[2:]...)
 		}
 		handle()
+		summary()
 		os.Exit(0)
 	}
 
