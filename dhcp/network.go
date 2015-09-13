@@ -93,6 +93,10 @@ func (pr *peer) Broadcast(p *Packet) error {
 	return send(conn, p)
 }
 
+func (pr *peer) Address() string {
+	return pr.local.LocalAddr().String()
+}
+
 // Client
 
 type Client struct {
