@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+var Version = "0.1"
+
 func cmdDiscover() {
 	var iface string
 	var secs int

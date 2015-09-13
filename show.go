@@ -93,6 +93,10 @@ loop:
 			fmt.Printf("%24d : ", o)
 		}
 
+		if o.Type == dhcp.VendorClassIdentifier {
+			stats.vdc[format.String(o.Data)]++
+		}
+
 		switch o.Type {
 		case dhcp.DHCPMessageType:
 			if m, ok := messageType[o.Data[0]]; ok {

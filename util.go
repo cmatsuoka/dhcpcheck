@@ -67,7 +67,7 @@ func VendorFromMAC(mac string) string {
 	}
 	v, _ := db.Lookup(mac)
 	if v == "" {
-		v = mac[:8]
+		v = fmt.Sprintf("%-8.8s", mac)
 	}
 	vendorCache[mac] = v
 	return v

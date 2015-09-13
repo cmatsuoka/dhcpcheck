@@ -64,13 +64,17 @@ func snoop(iface string) {
 		p := msg.packet
 
 		rip := msg.origin
+		pmac := p.Chaddr.MACAddress().String()
+
 		var rmac string
-		if rip == client.Address() {
-			rmac = mac
-		} else {
+		switch rip {
+		case "0.0.0.0":
+			rmac = pmac
+		/*case myip:	// FIXME: check against local ifaces
+		rmac = mac*/
+		default:
 			rmac = MACFromIP(rip)
 		}
-		pmac := p.Chaddr.MACAddress().String()
 
 		if iface != "" && mac != pmac {
 			continue

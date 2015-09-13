@@ -15,16 +15,18 @@ var (
 )
 
 type Statistics struct {
-	pkrec, pkproc uint64
-	pksent        uint64
-	count         map[string]uint64 // map mac to packet count
-	msg           map[string]uint64 // map msg type to count
+	pkrec, pkproc uint
+	pksent        uint
+	count         map[string]uint // map mac to packet count
+	msg           map[string]uint // map msg type to count
+	vdc           map[string]uint // map vendor class to count
 }
 
 func init() {
 	stats = Statistics{}
-	stats.count = map[string]uint64{}
-	stats.msg = map[string]uint64{}
+	stats.count = map[string]uint{}
+	stats.msg = map[string]uint{}
+	stats.vdc = map[string]uint{}
 
 	cmd = map[string]func(){
 		"discover": cmdDiscover,
@@ -60,7 +62,7 @@ func summary() {
 		fmt.Printf("  %-12.12s : %d\n", key, val)
 	}
 
-	fmt.Println("\nVendor stats")
+	fmt.Println("\nVendors")
 
 	vcount := map[string]int{}
 	for key, _ := range stats.count {
@@ -68,8 +70,13 @@ func summary() {
 		vcount[v]++
 	}
 
-	for key, _ := range vcount {
-		fmt.Printf("  %-8.8s : %d\n", key, vcount[key])
+	for key, val := range vcount {
+		fmt.Printf("  %-8.8s : %d\n", key, val)
+	}
+
+	fmt.Println("\nDHCP vendor classes:")
+	for key, val := range stats.vdc {
+		fmt.Printf("  %-20.20s : %d\n", key, val)
 	}
 }
 
