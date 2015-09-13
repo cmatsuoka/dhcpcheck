@@ -38,6 +38,24 @@ func getName(addr string) string {
 
 func getMACFromIP(addr string) string {
 	arp.CacheUpdate()
+	mac := arp.Search(addr)
+	if mac != "" {
+		return mac
+	}
+
+	ip := net.ParseIP(addr)
+	if ip == nil {
+		return mac
+	}
+
+	conn, err := net.DialUDP("udp", nil, &net.UDPAddr{ip, 0, ""})
+	if err != nil {
+		return mac
+	}
+	conn.Write([]byte{0})
+	conn.Close()
+
+	arp.CacheUpdate()
 	return arp.Search(addr)
 }
 
