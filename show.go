@@ -203,7 +203,7 @@ func showPacket(p *dhcp.Packet) {
 	fmt.Printf("Relay IP address  : %s\n", p.Giaddr.String())
 
 	mac := p.Chaddr.MACAddress().String()
-	fmt.Printf("Client MAC address: %s (%s)\n", mac, getVendor(mac))
+	fmt.Printf("Client MAC address: %s (%s)\n", mac, VendorFromMAC(mac))
 
 	showOptions(p)
 

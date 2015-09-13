@@ -17,7 +17,7 @@ func init() {
 	}
 }
 
-func getMAC(s string) (string, error) {
+func MACFromIface(s string) (string, error) {
 	ifaces, err := net.Interfaces()
 	checkError(err)
 	for _, i := range ifaces {
@@ -28,7 +28,7 @@ func getMAC(s string) (string, error) {
 	return "", fmt.Errorf("%s: no such interface", s)
 }
 
-func getName(addr string) string {
+func NameFromIP(addr string) string {
 	names, err := net.LookupAddr(addr)
 	if err != nil {
 		return ""
@@ -36,7 +36,7 @@ func getName(addr string) string {
 	return names[0]
 }
 
-func getMACFromIP(addr string) string {
+func MACFromIP(addr string) string {
 	arp.CacheUpdate()
 	mac := arp.Search(addr)
 	if mac != "" {
@@ -59,8 +59,7 @@ func getMACFromIP(addr string) string {
 	return arp.Search(addr)
 }
 
-func getVendor(mac string) string {
+func VendorFromMAC(mac string) string {
 	v, _ := db.Lookup(mac)
 	return v
-
 }

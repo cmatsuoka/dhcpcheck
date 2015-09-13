@@ -39,7 +39,7 @@ func listen(c chan message, peer dhcp.Peer) {
 
 func snoop(iface string) {
 
-	mac, err := getMAC(iface)
+	mac, err := MACFromIface(iface)
 	checkError(err)
 
 	fmt.Printf("Interface: %s [%s]\n", iface, mac)
@@ -62,12 +62,12 @@ func snoop(iface string) {
 		msg := <-c
 		ip := msg.origin
 		p := msg.packet
-		mac := getMACFromIP(ip)
+		mac := MACFromIP(ip)
 		if ip == "0.0.0.0" {
 			fmt.Printf("\n<<< Broadcast packet\n")
 		} else {
-			fmt.Printf("\n<<< Packet from %s (%s)\n", ip, getName(ip))
-			fmt.Printf("    MAC address: %s (%s)\n", mac, getVendor(mac))
+			fmt.Printf("\n<<< Packet from %s (%s)\n", ip, NameFromIP(ip))
+			fmt.Printf("    MAC address: %s (%s)\n", mac, VendorFromMAC(mac))
 		}
 		showPacket(&p)
 	}

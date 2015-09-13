@@ -33,7 +33,7 @@ func cmdDiscover() {
 
 func discover(iface string, timeout time.Duration) {
 
-	mac, err := getMAC(iface)
+	mac, err := MACFromIface(iface)
 	checkError(err)
 
 	fmt.Printf("Interface: %s [%s]\n", iface, mac)
@@ -69,13 +69,15 @@ func discover(iface string, timeout time.Duration) {
 			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			break
 		}
+
 		if o.Xid == p.Xid {
 			ip := remote.IP.String()
-			mac := getMACFromIP(ip)
+			mac := MACFromIP(ip)
+
 			fmt.Printf("\n<<< Receive DHCP offer from %s (%s)\n",
-				ip, getName(ip))
+				ip, NameFromIP(ip))
 			fmt.Printf("    MAC address: %s (%s)\n",
-				mac, getVendor(mac))
+				mac, VendorFromMAC(mac))
 
 			showPacket(&o)
 		}
