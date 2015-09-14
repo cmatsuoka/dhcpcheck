@@ -17,13 +17,21 @@ var (
 	cmd map[string]func()
 )
 
+type ServerStats struct {
+	Name string
+	Offer uint
+	Ack uint
+	Nack uint
+}
+
 type Statistics struct {
-	pkrec, pkproc uint
+	pkrec uint
+	 pkproc uint
 	pksent        uint
 	count         map[string]uint // map mac to packet count
 	msg           map[string]uint // map msg type to count
 	vdc           map[string]uint // map vendor class to count
-	srv           map[string]uint // map servers to count
+	srv           map[string]ServerStats // map servers to count
 }
 
 type StatReport struct {
@@ -31,7 +39,7 @@ type StatReport struct {
 	MsgType map[string]uint
 	Vendors map[string]uint
 	VdClass map[string]uint
-	Servers map[string]uint
+	Servers map[string]ServerStats
 }
 
 func init() {
@@ -40,7 +48,7 @@ func init() {
 		count: map[string]uint{},
 		msg:   map[string]uint{},
 		vdc:   map[string]uint{},
-		srv:   map[string]uint{},
+		srv:   map[string]ServerStats{},
 	}
 
 	report = StatReport{

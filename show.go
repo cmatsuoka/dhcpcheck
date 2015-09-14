@@ -111,8 +111,21 @@ loop:
 			}
 
 			switch o.Data[0] {
-			case dhcp.DHCPOffer, dhcp.DHCPAck, dhcp.DHCPNack:
-				stats.srv[originIP]++
+			case dhcp.DHCPOffer:
+				x := stats.srv[originIP]
+				x.Offer++
+				x.Name = NameFromIP(originIP)
+				stats.srv[originIP] = x
+			case dhcp.DHCPAck:
+				x := stats.srv[originIP]
+				x.Ack++
+				x.Name = NameFromIP(originIP)
+				stats.srv[originIP] = x
+			case dhcp.DHCPNack:
+				x := stats.srv[originIP]
+				x.Nack++
+				x.Name = NameFromIP(originIP)
+				stats.srv[originIP] = x
 			}
 
 		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
