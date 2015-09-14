@@ -12,26 +12,26 @@ import (
 var (
 	stats  Statistics
 	report StatReport
-	repch chan string
+	repch  chan string
 
 	cmd map[string]func()
 )
 
 type ServerStats struct {
-	Name string
+	Name  string
 	Offer uint
-	Ack uint
-	Nack uint
+	Ack   uint
+	Nack  uint
 }
 
 type Statistics struct {
-	pkrec uint
-	 pkproc uint
-	pksent        uint
-	count         map[string]uint // map mac to packet count
-	msg           map[string]uint // map msg type to count
-	vdc           map[string]uint // map vendor class to count
-	srv           map[string]ServerStats // map servers to count
+	pkrec  uint
+	pkproc uint
+	pksent uint
+	count  map[string]uint        // map mac to packet count
+	msg    map[string]uint        // map msg type to count
+	vdc    map[string]uint        // map vendor class to count
+	srv    map[string]ServerStats // map servers to count
 }
 
 type StatReport struct {

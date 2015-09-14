@@ -32,12 +32,41 @@ func status(w http.ResponseWriter, r *http.Request) {
 	<head>
 		<meta charset="UTF-8">
 		<title>{{.Title}}</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<style type="text/css">
+body {
+	font-family: verdana,arial,sans-serif;
+	font-size:12px;
+}
+table {
+	color:#333333;
+	border-width: 1px;
+	border-color: #666666;
+	border-collapse: collapse;
+}
+table th {
+	padding: 8px;
+	border-width: 1px;
+	font-weight: bold;
+	border-style: solid;
+	border-color: #666666;
+	background-color: #dedede;
+}
+table td {
+	padding: 8px;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #666666;
+	background-color: #ffffff;
+}
+		</style>
 	</head>
 	<body>
 		<script>
     function showSrv(id,map) {
-	var s="</td><td>"
-        var t="<table><thead><tr><td>Server IP"+s+"Name"+s+"Offers"+s+"ACKs"+s+"NACKs</td></tr></thead><tbody>";
+	var h="</th><th>";
+	var s="</td><td>";
+        var t="<table><thead><tr><th>Server IP"+h+"Name"+h+"Offers"+h+"ACKs"+h+"NACKs</th></tr></thead><tbody>";
 	for (var key in map) {
 		var v=map[key]
         	t+="<tr><td>"+key+s+v.Name+s+v.Offer+s+v.Ack+s+v.Nack+"</td></tr>";
@@ -46,7 +75,7 @@ func status(w http.ResponseWriter, r *http.Request) {
         document.getElementById(id).innerHTML=t;
     }
     function showMap(id,map,head) {
-        var t="<table><thead><tr><td>"+head+"</td><td>Packets</td></tr></thead><tbody>";
+        var t="<table><thead><tr><th>"+head+"</th><th>Packets</th></tr></thead><tbody>";
 	for (var key in map) {
         	t+="<tr><td>"+key+"</td><td>"+map[key]+"</td></tr>";
 	}

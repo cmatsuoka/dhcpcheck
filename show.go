@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 
 	"./dhcp"
 	"./format"
@@ -246,16 +246,16 @@ func showPacket(p *dhcp.Packet, originIP string) {
 	report.Packets++
 	report.MsgType = stats.msg
 
-        vcount := map[string]uint{}
-        for key, val := range stats.count {
-                v := VendorFromMAC(key)
-                vcount[v] += val
-        }
+	vcount := map[string]uint{}
+	for key, val := range stats.count {
+		v := VendorFromMAC(key)
+		vcount[v] += val
+	}
 	report.Vendors = vcount
 	report.VdClass = stats.vdc
 	report.Servers = stats.srv
 
-	j,err := json.Marshal(report)
+	j, err := json.Marshal(report)
 	if err != nil {
 		fmt.Errorf("Error: %s\n", err.Error())
 		return
