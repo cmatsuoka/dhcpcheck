@@ -35,30 +35,30 @@ func status(w http.ResponseWriter, r *http.Request) {
 	</head>
 	<body>
 		<script>
+    function showMap(id,map) {
+        document.getElementById(id).innerHTML = "";
+	for (var key in map) {
+        	document.getElementById(id).innerHTML += key+":"+map[key]+"<br>";
+	}
+    }
     var source = new EventSource("/update/");
     source.addEventListener("message", function(e) {
-        document.getElementById("result").innerHTML = event.data;
+	//document.getElementById("result").innerHTML = event.data;
 	stats=JSON.parse(event.data);
 	document.getElementById("packets").innerHTML=stats.Packets;
-        document.getElementById("msgtype").innerHTML = "";
-	for (var key in stats.MsgType) {
-        	document.getElementById("msgtype").innerHTML += key+":"+stats.MsgType[key]+"<br>";
-	}
-        document.getElementById("vendors").innerHTML = "";
-	for (var key in stats.Vendors) {
-        	document.getElementById("vendors").innerHTML += key+":"+stats.Vendors[key]+"<br>";
-	}
-        document.getElementById("vdclass").innerHTML = "";
-	for (var key in stats.VdClass) {
-        	document.getElementById("vdclass").innerHTML += key+":"+stats.VdClass[key]+"<br>";
-	}
+	showMap("servers", stats.Servers)
+	showMap("msgtype", stats.MsgType)
+	showMap("vendors", stats.Vendors)
+	showMap("vdclass", stats.VdClass)
     }, false);
 		</script>
 
 		<h1>{{.Header}}</h1>
-		SSE test: <span id="result"></span>
+		<!-- SSE test: <span id="result"></span> -->
 		<p>
 		Packets: <span id="packets">0</span>
+		<h2>DHCP servers</h2>
+		<div id="servers">No packets received.</div>
 		<h2>DHCP message types</h2>
 		<div id="msgtype">No packets received.</div>
 		<h2>Packets by vendor</h2>

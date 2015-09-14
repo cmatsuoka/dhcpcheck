@@ -23,6 +23,7 @@ type Statistics struct {
 	count         map[string]uint // map mac to packet count
 	msg           map[string]uint // map msg type to count
 	vdc           map[string]uint // map vendor class to count
+	srv           map[string]uint // map servers to count
 }
 
 type StatReport struct {
@@ -30,6 +31,7 @@ type StatReport struct {
 	MsgType map[string]uint
 	Vendors map[string]uint
 	VdClass map[string]uint
+	Servers map[string]uint
 }
 
 func init() {
@@ -38,6 +40,7 @@ func init() {
 		count: map[string]uint{},
 		msg:   map[string]uint{},
 		vdc:   map[string]uint{},
+		srv:   map[string]uint{},
 	}
 
 	report = StatReport{

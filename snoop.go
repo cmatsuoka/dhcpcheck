@@ -94,6 +94,6 @@ func snoop(iface string) {
 				rmac, VendorFromMAC(rmac))
 		}
 
-		showPacket(&p)
+		showPacket(&p, rip)
 	}
 }

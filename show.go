@@ -69,7 +69,7 @@ func init() {
 	}
 }
 
-func showOptions(p *dhcp.Packet) {
+func showOptions(p *dhcp.Packet, originIP string) {
 
 	opts, err := p.DecodeOptions()
 	if err != nil {
@@ -103,10 +103,16 @@ loop:
 			if m, ok := messageType[o.Data[0]]; ok {
 				fmt.Printf(m)
 				stats.msg[m]++
+
 			} else {
 				s := fmt.Sprintf("<unknown: %d>", o.Data[0])
 				fmt.Printf(s)
 				stats.msg[s]++
+			}
+
+			switch o.Data[0] {
+			case dhcp.DHCPOffer, dhcp.DHCPAck, dhcp.DHCPNack:
+				stats.srv[originIP]++
 			}
 
 		case dhcp.Router, dhcp.DomainNameServer, dhcp.NetBIOSNameServer:
@@ -202,7 +208,7 @@ func opcode(o byte) string {
 	return fmt.Sprintf("<unknown:%d>", o)
 }
 
-func showPacket(p *dhcp.Packet) {
+func showPacket(p *dhcp.Packet, originIP string) {
 	fmt.Printf("Message opcode    : %s\n", opcode(p.Op))
 	//fmt.Printf("HW address type   : %d\n", p.Htype)
 	//fmt.Printf("HW address length : %d\n", p.Hlen)
@@ -218,7 +224,7 @@ func showPacket(p *dhcp.Packet) {
 	mac := p.Chaddr.MACAddress().String()
 	fmt.Printf("Client MAC address: %s (%s)\n", mac, VendorFromMAC(mac))
 
-	showOptions(p)
+	showOptions(p, originIP)
 
 	fmt.Println()
 
@@ -234,6 +240,7 @@ func showPacket(p *dhcp.Packet) {
         }
 	report.Vendors = vcount
 	report.VdClass = stats.vdc
+	report.Servers = stats.srv
 
 	j,err := json.Marshal(report)
 	if err != nil {

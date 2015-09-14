@@ -62,7 +62,7 @@ func discover(iface string, timeout time.Duration) {
 		[]byte(class)...))
 
 	fmt.Println("\n>>> Send DHCP discover")
-	showPacket(p)
+	showPacket(p, "")
 	err = client.Broadcast(p)
 	checkError(err)
 
@@ -100,7 +100,7 @@ func discover(iface string, timeout time.Duration) {
 		fmt.Printf("    MAC address: %s (%s)\n",
 			rmac, VendorFromMAC(rmac))
 
-		showPacket(&o)
+		showPacket(&o, rip)
 	}
 	fmt.Println("No more offers.")
 }
