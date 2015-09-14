@@ -38,13 +38,13 @@ func listen(c chan message, peer dhcp.Peer) {
 
 func snoop(iface string) {
 
-	var mac string
-	if iface != "" {
+	//var mac string
+	/*if iface != "" {
 		var err error
 		mac, err = MACFromIface(iface)
 		checkError(err)
 		fmt.Printf("Interface: %s [%s]\n", iface, mac)
-	}
+	}*/
 
 	// Set up client
 	client, err := dhcp.NewClient()
@@ -78,9 +78,9 @@ func snoop(iface string) {
 			rmac = MACFromIP(rip)
 		}
 
-		if iface != "" && mac != pmac {
+		/*if iface != "" && mac != pmac {
 			continue
-		}
+		}*/
 
 		stats.pkproc++
 		stats.count[rmac]++

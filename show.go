@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"encoding/json"
 
 	"./dhcp"
 	"./format"
@@ -220,4 +221,24 @@ func showPacket(p *dhcp.Packet) {
 	showOptions(p)
 
 	fmt.Println()
+
+	// Update report
+
+	report.Packets++
+	report.MsgType = stats.msg
+
+        vcount := map[string]uint{}
+        for key, val := range stats.count {
+                v := VendorFromMAC(key)
+                vcount[v] += val
+        }
+	report.Vendors = vcount
+	report.VdClass = stats.vdc
+
+	j,err := json.Marshal(report)
+	if err != nil {
+		fmt.Errorf("Error: %s\n", err.Error())
+		return
+	}
+	repch <- string(j)
 }

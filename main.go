@@ -10,8 +10,11 @@ import (
 )
 
 var (
-	stats Statistics
-	cmd   map[string]func()
+	stats  Statistics
+	report StatReport
+	repch chan string
+
+	cmd map[string]func()
 )
 
 type Statistics struct {
@@ -22,16 +25,31 @@ type Statistics struct {
 	vdc           map[string]uint // map vendor class to count
 }
 
+type StatReport struct {
+	Packets int
+	MsgType map[string]uint
+	Vendors map[string]uint
+	VdClass map[string]uint
+}
+
 func init() {
-	stats = Statistics{}
-	stats.count = map[string]uint{}
-	stats.msg = map[string]uint{}
-	stats.vdc = map[string]uint{}
+
+	stats = Statistics{
+		count: map[string]uint{},
+		msg:   map[string]uint{},
+		vdc:   map[string]uint{},
+	}
+
+	report = StatReport{
+		MsgType: map[string]uint{},
+	}
 
 	cmd = map[string]func(){
 		"discover": cmdDiscover,
 		"snoop":    cmdSnoop,
 	}
+
+	repch = make(chan string, 10)
 }
 
 func checkError(err error) {
