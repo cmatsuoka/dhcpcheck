@@ -32,10 +32,10 @@ func cmdDiscover() {
 
 	setupSummary()
 
-	discover(iface, timeout)
+	discover(iface, timeout, false)
 }
 
-func discover(iface string, timeout time.Duration) {
+func discover(iface string, timeout time.Duration, silent bool) {
 
 	mac, err := MACFromIface(iface)
 	checkError(err)
@@ -62,7 +62,10 @@ func discover(iface string, timeout time.Duration) {
 		[]byte(class)...))
 
 	fmt.Println("\n>>> Send DHCP discover")
-	showPacket(p, "")
+
+	if !silent {
+		showPacket(p, "")
+	}
 	err = client.Broadcast(p)
 	checkError(err)
 

@@ -24,6 +24,9 @@ func update(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func disc(w http.ResponseWriter, r *http.Request) {
+	discover("en0", -1, true)
+}
 
 func status(w http.ResponseWriter, r *http.Request) {
 	const page = `
@@ -32,7 +35,6 @@ func status(w http.ResponseWriter, r *http.Request) {
 	<head>
 		<meta charset="UTF-8">
 		<title>{{.Title}}</title>
-		<link rel="stylesheet" type="text/css" href="style.css">
 		<style type="text/css">
 body {
 	font-family: verdana,arial,sans-serif;
@@ -63,6 +65,11 @@ table td {
 	</head>
 	<body>
 		<script>
+    function discover() {
+        var x = new XMLHttpRequest();
+        x.open("GET", "/discover/", true);
+        x.send(null);
+    }
     function showSrv(id,map) {
 	var h="</th><th>";
 	var s="</td><td>";
@@ -95,6 +102,7 @@ table td {
 		</script>
 
 		<h1>{{.Header}}</h1>
+		<button onclick="discover()">Discover</button>
 		<!-- SSE test: <span id="result"></span> -->
 		<p>
 		Packets: <span id="packets">0</span>
@@ -128,5 +136,6 @@ table td {
 func serve(port int) {
 	http.HandleFunc("/", status)
 	http.HandleFunc("/update/", update)
+	http.HandleFunc("/discover/", disc)
 	http.ListenAndServe(":"+strconv.Itoa(port), nil)
 }
