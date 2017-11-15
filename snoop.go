@@ -1,10 +1,11 @@
 package main
 
 import (
-	"./dhcp"
 	"flag"
 	"fmt"
 	"os"
+
+	"github.com/cmatsuoka/dhcpcheck/dhcp"
 )
 
 func cmdSnoop() {
