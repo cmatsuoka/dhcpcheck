@@ -1,11 +1,12 @@
 package main
 
 import (
-	"./dhcp"
 	"flag"
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/cmatsuoka/dhcpcheck/dhcp"
 )
 
 var Version = "0.1"
