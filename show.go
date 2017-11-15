@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"./dhcp"
-	"./format"
+	"github.com/cmatsuoka/dhcp"
+	"github.com/cmatsuoka/format"
 	"github.com/cmatsuoka/dncomp"
 )
 
