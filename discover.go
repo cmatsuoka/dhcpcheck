@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./dhcp"
+	"github.com/cmatsuoka/dhcpcheck/dhcp"
 	"flag"
 	"fmt"
 	"os"
